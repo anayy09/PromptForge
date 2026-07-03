@@ -1,0 +1,429 @@
+[
+  {
+    "id": "codestral-22b",
+    "uuid": "13b7aa94-1056-432c-aef6-7753c4b996e7",
+    "name": "codestral-22b",
+    "path": "mistralai/Codestral-22B-v0.1",
+    "costInput": 0.2,
+    "costOutput": 0.6,
+    "category": "Code",
+    "architecture": "Code-Specialized Transformer",
+    "size": "22B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "32K tokens",
+    "primaryUseCases": "Code Generation, Completion, Bug Fixing, Code Review, 80+ Languages",
+    "bestFor": "Dedicated code specialist; strongest open code model in registry"
+  },
+  {
+    "id": "kokoro",
+    "uuid": "246fe224-eb16-4034-9fcf-018068787d2b",
+    "name": "kokoro",
+    "path": "kokoro",
+    "costInput": null,
+    "costOutput": null,
+    "category": "TTS (Text-to-Speech)",
+    "architecture": "StyleTTS2-based",
+    "size": "~82M",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Audio"
+    ],
+    "contextWindow": "N/A",
+    "primaryUseCases": "Text-to-Speech, Voice Generation, Audio Narration, Multi-Voice Output",
+    "bestFor": "Lightweight natural TTS with multiple voice styles; near real-time synthesis"
+  },
+  {
+    "id": "gemma-3-27b-it",
+    "uuid": "306a19a9-8dc5-4116-8961-3d78608ccd75",
+    "name": "gemma-3-27b-it",
+    "path": "google/gemma-3-27b-it",
+    "costInput": 0.12,
+    "costOutput": 0.2,
+    "category": "General LLM",
+    "architecture": "Dense Transformer (Multimodal)",
+    "size": "27B",
+    "inputModalities": [
+      "Text",
+      "Image"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Vision Chat, Document Analysis, Multilingual, RAG",
+    "bestFor": "Cost-effective vision-language model at 27B scale"
+  },
+  {
+    "id": "mistral-small-3.1",
+    "uuid": "3c22f6b1-e5bc-4991-b866-0b69db00c39c",
+    "name": "mistral-small-3.1",
+    "path": "mistral-small-3.1",
+    "costInput": 0.2,
+    "costOutput": 0.6,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "~22B",
+    "inputModalities": [
+      "Text",
+      "Image"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Vision Q&A, Document Analysis, Multilingual Chat",
+    "bestFor": "Multimodal mid-size model; 128K vision context at low cost"
+  },
+  {
+    "id": "medgemma-27b-it",
+    "uuid": "40e7a781-1ed2-4652-866c-61a36bd1c0ab",
+    "name": "medgemma-27b-it",
+    "path": "google/medgemma-27b-it",
+    "costInput": 0.12,
+    "costOutput": 0.2,
+    "category": "Medical LLM",
+    "architecture": "Dense Transformer (Medical Domain)",
+    "size": "27B",
+    "inputModalities": [
+      "Text",
+      "Image"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Medical Q&A, Radiology Analysis, Pathology Imaging, Clinical Notes, EHR Summarization",
+    "bestFor": "Medical domain specialist; handles clinical imaging and structured medical notes"
+  },
+  {
+    "id": "nomic-embed-text-v1.5",
+    "uuid": "4336156a-c4f6-4299-9b59-e17ac97479d4",
+    "name": "nomic-embed-text-v1.5",
+    "path": "nomic-ai/nomic-embed-text-v1.5",
+    "costInput": 0.01,
+    "costOutput": 0,
+    "category": "Embedding",
+    "architecture": "Matryoshka Representation Learning",
+    "size": "~137M",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Vector Embedding"
+    ],
+    "contextWindow": "8K tokens",
+    "primaryUseCases": "Semantic Search, RAG Retrieval, Flexible-Dimension Embeddings",
+    "bestFor": "Matryoshka embeddings - truncate to any dimension without retraining"
+  },
+  {
+    "id": "flux.2-klein",
+    "uuid": "45b74fe1-4493-4563-93c0-0907a6930279",
+    "name": "flux.2-klein",
+    "path": "black-forest-labs/FLUX.2-klein-9B",
+    "costInput": 0.15,
+    "costOutput": null,
+    "category": "Image Generation",
+    "architecture": "Diffusion Transformer (DiT)",
+    "size": "9B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Image"
+    ],
+    "contextWindow": "N/A",
+    "primaryUseCases": "Text-to-Image, Fast Prototyping, Lightweight Creative Generation",
+    "bestFor": "Smallest and fastest FLUX variant; rapid iteration at low compute cost"
+  },
+  {
+    "id": "flux.1-dev",
+    "uuid": "6227371f-8c40-40c7-9320-6c94be223acd",
+    "name": "flux.1-dev",
+    "path": "black-forest-labs/FLUX.1-dev",
+    "costInput": 0.15,
+    "costOutput": null,
+    "category": "Image Generation",
+    "architecture": "Diffusion Transformer (DiT)",
+    "size": "~12B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Image"
+    ],
+    "contextWindow": "N/A",
+    "primaryUseCases": "High-Quality Image Generation, Research, Art Production, Fine-tuning Base",
+    "bestFor": "Best image quality in registry; photorealism, composition, prompt adherence"
+  },
+  {
+    "id": "whisper-large-v3",
+    "uuid": "6474a0ec-5d9c-440e-9157-b66c00275f3f",
+    "name": "whisper-large-v3",
+    "path": "Systran/faster-whisper-large-v3",
+    "costInput": null,
+    "costOutput": null,
+    "category": "ASR (Speech-to-Text)",
+    "architecture": "Encoder-Decoder Transformer",
+    "size": "1.5B",
+    "inputModalities": [
+      "Audio"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "30-second audio chunks",
+    "primaryUseCases": "Speech-to-Text, Transcription, Translation, 99-Language Support",
+    "bestFor": "Industry-standard ASR; 99-language transcription + direct translation"
+  },
+  {
+    "id": "gpt-oss-20b",
+    "uuid": "76658934-6222-4854-a9ab-3837f3b681e6",
+    "name": "gpt-oss-20b",
+    "path": "openai/gpt-oss-20b",
+    "costInput": 0.03,
+    "costOutput": 0.07,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "20B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "High-Volume Chat, Batch Processing, Cost-Sensitive Production",
+    "bestFor": "Cheapest text LLM in registry: $0.03 input / $0.07 output per MTok"
+  },
+  {
+    "id": "nemotron-3-nano-30b-a3b",
+    "uuid": "7833259c-cf43-46ba-b5be-c0216220425b",
+    "name": "nemotron-3-nano-30b-a3b",
+    "path": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+    "costInput": 0.06,
+    "costOutput": 0.24,
+    "category": "General LLM",
+    "architecture": "MoE (Mixture of Experts)",
+    "size": "30B total / 3B active",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Efficient Reasoning, STEM, Agentic Tasks, Instruction Following",
+    "bestFor": "MoE efficiency: 30B params but only 3B active per token; NVIDIA-optimized"
+  },
+  {
+    "id": "llama-3.1-70b-instruct",
+    "uuid": "79d415fd-c3d3-4734-8eab-18344eb4ef9a",
+    "name": "llama-3.1-70b-instruct",
+    "path": "meta-llama/Llama-3.1-70B-Instruct",
+    "costInput": 0.4,
+    "costOutput": 0.4,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "70B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Chat, Reasoning, Instruction Following, Summarization",
+    "bestFor": "Proven predecessor 70B; stable and widely tested in production"
+  },
+  {
+    "id": "nemotron-3-super-120b-a12b",
+    "uuid": "7f697ce9-4d0f-424c-b602-d43d307a4db7",
+    "name": "nemotron-3-super-120b-a12b",
+    "path": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+    "costInput": 0.06,
+    "costOutput": 0.24,
+    "category": "General LLM",
+    "architecture": "MoE (Mixture of Experts)",
+    "size": "120B total / 12B active",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Complex Reasoning, STEM, Agentic Workflows, Long-form Generation",
+    "bestFor": "120B MoE at $0.06/MTok - best quality-to-price ratio in entire registry"
+  },
+  {
+    "id": "llama-3.3-70b-instruct",
+    "uuid": "8303ab59-3670-4510-9ae7-0aa43160f49f",
+    "name": "llama-3.3-70b-instruct",
+    "path": "meta-llama/Llama-3.3-70B-Instruct",
+    "costInput": 0.4,
+    "costOutput": 0.4,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "70B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Chat, Reasoning, Instruction Following, Summarization, RAG",
+    "bestFor": "Best current Meta flagship; latest-gen 70B for general-purpose tasks"
+  },
+  {
+    "id": "mistral-7b-instruct",
+    "uuid": "9d5ad7f6-08df-4616-855d-58df159705d2",
+    "name": "mistral-7b-instruct",
+    "path": "mistralai/Mistral-7B-Instruct-v0.3",
+    "costInput": 0.15,
+    "costOutput": 0.2,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "7B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "32K tokens",
+    "primaryUseCases": "Fast Chat, Function Calling, Classification, High-Volume Batch",
+    "bestFor": "Budget text LLM; native function calling; best for high-throughput jobs"
+  },
+  {
+    "id": "flux.1-schnell",
+    "uuid": "a12fdd31-8910-4b7c-a7b2-e1045d3c6bc3",
+    "name": "flux.1-schnell",
+    "path": "black-forest-labs/FLUX.1-schnell",
+    "costInput": 0.15,
+    "costOutput": null,
+    "category": "Image Generation",
+    "architecture": "Diffusion Transformer (DiT)",
+    "size": "~12B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Image"
+    ],
+    "contextWindow": "N/A",
+    "primaryUseCases": "Text-to-Image, High-Throughput Creative, Rapid Prototyping",
+    "bestFor": "4-step distilled generation; speed-optimized full-scale FLUX for production"
+  },
+  {
+    "id": "granite-3.3-8b-instruct",
+    "uuid": "b7cb06b9-b291-4765-9a66-331092771559",
+    "name": "granite-3.3-8b-instruct",
+    "path": "ibm-granite/granite-3.3-8b-instruct",
+    "costInput": 0.22,
+    "costOutput": 0.22,
+    "category": "General LLM",
+    "architecture": "Dense Transformer (Enterprise)",
+    "size": "8B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Enterprise Chat, Agentic Workflows, Structured Output, Safety-focused tasks",
+    "bestFor": "IBM enterprise model; strong safety, compliance, and agentic support"
+  },
+  {
+    "id": "llama-3.1-8b-instruct",
+    "uuid": "bf1aac60-9914-405a-89c1-f81bde9821f1",
+    "name": "llama-3.1-8b-instruct",
+    "path": "meta-llama/Llama-3.1-8B-Instruct",
+    "costInput": 0.22,
+    "costOutput": 0.22,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "8B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Fast Chat, Edge Inference, Lightweight Agents",
+    "bestFor": "Low-latency text model; ideal for real-time or edge deployment"
+  },
+  {
+    "id": "gemma-4-31b-it",
+    "uuid": "c6a64530-7f4e-4290-829c-c5957fc8c3f0",
+    "name": "gemma-4-31b-it",
+    "path": "google/gemma-4-31b-it",
+    "costInput": 0.12,
+    "costOutput": 0.36,
+    "category": "General LLM",
+    "architecture": "Dense Transformer (Multimodal)",
+    "size": "31B",
+    "inputModalities": [
+      "Text",
+      "Image",
+      "Video",
+      "Audio"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Multimodal Chat, Video Understanding, Image Analysis, Audio Tasks",
+    "bestFor": "Widest modality coverage in registry: text + image + video + audio input"
+  },
+  {
+    "id": "gpt-oss-120b",
+    "uuid": "d513f8b1-8bc0-4465-a824-43634979ebc0",
+    "name": "gpt-oss-120b",
+    "path": "openai/gpt-oss-120b",
+    "costInput": 0.06,
+    "costOutput": 0.15,
+    "category": "General LLM",
+    "architecture": "Dense Transformer",
+    "size": "120B",
+    "inputModalities": [
+      "Text",
+      "Image"
+    ],
+    "outputModalities": [
+      "Text"
+    ],
+    "contextWindow": "128K tokens",
+    "primaryUseCases": "Complex Reasoning, Vision, Code, Agentic Workflows",
+    "bestFor": "Top-tier open model; multimodal 120B at sub-$0.10/MTok combined cost"
+  },
+  {
+    "id": "sfr-embedding-mistral",
+    "uuid": "f2432c74-a54a-4b64-ac2e-9e9127673796",
+    "name": "sfr-embedding-mistral",
+    "path": "Salesforce/SFR-Embedding-Mistral",
+    "costInput": 0.01,
+    "costOutput": 0,
+    "category": "Embedding",
+    "architecture": "Mistral-based Encoder",
+    "size": "7B",
+    "inputModalities": [
+      "Text"
+    ],
+    "outputModalities": [
+      "Vector Embedding"
+    ],
+    "contextWindow": "32K tokens",
+    "primaryUseCases": "Semantic Search, RAG Retrieval, Clustering, Classification, Similarity",
+    "bestFor": "Top-ranked 7B embedding model; 32K long-context retrieval support"
+  }
+]
