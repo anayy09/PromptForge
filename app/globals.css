@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * PromptForge tokens. Values are OKLCH "L C H" triplets consumed by
+ * tailwind.config.ts as oklch(var(--x) / <alpha>). Neutrals are tinted toward
+ * the ember hue (warm) rather than pure gray. Never #000 / #fff.
+ */
+:root {
+  --canvas: 0.986 0.004 70;
+  --surface: 0.968 0.005 68;
+  --surface-2: 0.949 0.007 66;
+  --sunken: 0.935 0.009 64;
+  --hairline: 0.885 0.008 60;
+  --hairline-strong: 0.78 0.012 58;
+  --ink: 0.245 0.014 52;
+  --ink-soft: 0.42 0.012 52;
+  --muted: 0.56 0.010 54;
+  --faint: 0.7 0.008 56;
+  --ember: 0.64 0.185 46;
+  --ember-strong: 0.56 0.2 40;
+  --ember-soft: 0.93 0.035 62;
+  --steel: 0.55 0.09 245;
+  --steel-soft: 0.93 0.02 240;
+  --quench: 0.62 0.115 168;
+  --danger: 0.57 0.2 27;
+  --on-ember: 0.99 0.005 70;
+
+  /* --font-mono / --font-sans are provided by next/font in app/layout.tsx. */
+
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: 0.195 0.008 56;
+  --surface: 0.232 0.01 56;
+  --surface-2: 0.268 0.012 57;
+  --sunken: 0.17 0.008 56;
+  --hairline: 0.32 0.012 58;
+  --hairline-strong: 0.42 0.014 58;
+  --ink: 0.945 0.006 74;
+  --ink-soft: 0.8 0.008 70;
+  --muted: 0.64 0.01 62;
+  --faint: 0.5 0.01 60;
+  --ember: 0.74 0.17 52;
+  --ember-strong: 0.8 0.155 58;
+  --ember-soft: 0.32 0.06 46;
+  --steel: 0.74 0.09 238;
+  --steel-soft: 0.34 0.04 240;
+  --quench: 0.76 0.12 168;
+  --danger: 0.68 0.185 27;
+  --on-ember: 0.2 0.02 50;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    border-color: oklch(var(--hairline));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: oklch(var(--canvas));
+    color: oklch(var(--ink));
+    font-family: var(--font-mono);
+    font-feature-settings: "calt" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: oklch(var(--ember) / 0.28);
+    color: oklch(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid oklch(var(--ember));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(var(--hairline-strong) / 0.7);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(var(--muted) / 0.7);
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* Hairline-bordered block sitting flush on the canvas. The system's card. */
+  .panel {
+    @apply border border-hairline bg-surface;
+  }
+
+  /* Faint forge-grid texture used behind the hero / empty states. */
+  .forge-grid {
+    background-image:
+      linear-gradient(to right, oklch(var(--hairline) / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(var(--hairline) / 0.6) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  }
+
+  /* Bracketed ASCII marker used in place of bullets / icons. */
+  .bracket {
+    @apply text-ember font-medium;
+  }
+
+  /* Molten sweep used on the primary action while forging. */
+  .forge-bar {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(var(--ember) / 0.9),
+      oklch(var(--ember-strong) / 0.6),
+      transparent
+    );
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  /* Respect reduced-motion: kill decorative animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
