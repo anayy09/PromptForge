@@ -115,13 +115,13 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
-  defaultCategory: "coding",
+  defaultCategory: "general",
   rewriterOverrides: {},
   knobs: { preserveWording: true },
   requestVariants: false,
 };
 
-const SETTINGS_KEY = "promptforge.settings.v1";
+const SETTINGS_KEY = "promptforge.settings.v2";
 
 export function loadSettings(): Settings {
   if (typeof localStorage === "undefined") return DEFAULT_SETTINGS;

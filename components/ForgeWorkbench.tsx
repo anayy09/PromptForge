@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CategoryPicker } from "./CategoryPicker";
 import { PromptInput } from "./PromptInput";
+import { PromptScore } from "./PromptScore";
+import { ProvingGround } from "./ProvingGround";
+import { OptimizeLab } from "./OptimizeLab";
 import { ModelPicker } from "./ModelPicker";
 import { KnobPanel } from "./KnobPanel";
+import { ModeSelector } from "./ModeSelector";
 import { ForgeButton } from "./ForgeButton";
 import { EnhancedOutput } from "./EnhancedOutput";
 import { useSettings } from "./providers";
 import { CATEGORIES } from "@/lib/categories";
 import { costFor, getById, type AppCategory } from "@/lib/registry";
 import { estimateTokens } from "@/lib/tokens";
+import { lintPrompt } from "@/lib/lint";
 import { formatCost } from "@/lib/format";
-import type { EnhanceResponse, Knobs } from "@/lib/schema";
+import type { EnhanceResponse, ForgeMode, Knobs } from "@/lib/schema";
 import { newId, patchEntry, saveHistory, type HistoryEntry } from "@/lib/storage";
 import { slugTitle } from "@/lib/format";
 
@@ -21,12 +26,14 @@ const LOAD_KEY = "promptforge.load";
 export function ForgeWorkbench() {
   const { settings, hydrated } = useSettings();
 
-  const [category, setCategory] = useState<AppCategory>("coding");
+  const [category, setCategory] = useState<AppCategory>("general");
   const [rawPrompt, setRawPrompt] = useState("");
-  const [rewriterId, setRewriterId] = useState(CATEGORIES.coding.defaultRewriterId);
+  const [rewriterId, setRewriterId] = useState(CATEGORIES.general.defaultRewriterId);
   const [targetId, setTargetId] = useState("");
   const [knobs, setKnobs] = useState<Knobs>({ preserveWording: true });
   const [variants, setVariants] = useState(false);
+  const [mode, setMode] = useState<ForgeMode>("single");
+  const [rounds, setRounds] = useState(2);
 
   const [result, setResult] = useState<EnhanceResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,6 +95,8 @@ export function ForgeWorkbench() {
           targetId: targetId || undefined,
           knobs,
           variants,
+          mode,
+          rounds: mode === "reflexion" ? rounds : undefined,
         }),
       });
       const data = await res.json();
@@ -125,7 +134,7 @@ export function ForgeWorkbench() {
     } finally {
       setLoading(false);
     }
-  }, [rawPrompt, category, rewriterId, targetId, knobs, variants, loading]);
+  }, [rawPrompt, category, rewriterId, targetId, knobs, variants, mode, rounds, loading]);
 
   const toggleFavorite = () => {
     if (!entryId) return;
@@ -140,11 +149,12 @@ export function ForgeWorkbench() {
   const estCost = formatCost(costFor(rewriterId, estIn, estOut), true);
 
   const cat = CATEGORIES[category];
+  const rawLint = useMemo(() => lintPrompt(rawPrompt, category), [rawPrompt, category]);
 
   return (
     <div className="flex flex-col gap-4">
       <section className="panel rounded p-3.5">
-        <CategoryPicker value={category} onChange={onCategory} />
+        <CategoryPicker value={category} onChange={onCategory} rawPrompt={rawPrompt} />
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -160,6 +170,8 @@ export function ForgeWorkbench() {
             />
           </section>
 
+          {rawPrompt.trim().length > 0 && <PromptScore result={rawLint} label="Raw quality" />}
+
           <ModelPicker
             category={category}
             rewriterId={rewriterId}
@@ -167,6 +179,8 @@ export function ForgeWorkbench() {
             onRewriter={setRewriterId}
             onTarget={setTargetId}
           />
+
+          <ModeSelector mode={mode} onMode={setMode} rounds={rounds} onRounds={setRounds} />
 
           <KnobPanel
             knobs={knobs}
@@ -181,10 +195,18 @@ export function ForgeWorkbench() {
             disabled={!rawPrompt.trim()}
             estCost={estCost}
           />
+
+          <OptimizeLab
+            rawPrompt={rawPrompt}
+            category={category}
+            rewriterId={rewriterId}
+            targetId={targetId || undefined}
+            onUseWinner={setRawPrompt}
+          />
         </div>
 
         {/* Forged side */}
-        <div className="flex min-h-[420px] flex-col">
+        <div className="flex min-h-[420px] flex-col gap-3">
           <EnhancedOutput
             result={result}
             rawPrompt={rawPrompt}
@@ -194,6 +216,14 @@ export function ForgeWorkbench() {
             onToggleFavorite={toggleFavorite}
             onReforge={forge}
           />
+          {result && !loading && (
+            <ProvingGround
+              rawPrompt={rawPrompt}
+              enhancedPrompt={result.enhancedPrompt}
+              category={result.category}
+              targetId={result.target?.id}
+            />
+          )}
         </div>
       </div>
     </div>

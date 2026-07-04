@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { EnhanceResponse } from "@/lib/schema";
+import type { EnhanceResponse, ForgeMethod } from "@/lib/schema";
 import { diffWords, diffStats } from "@/lib/diff";
+import { lintPrompt } from "@/lib/lint";
 import { formatCost, formatTokens } from "@/lib/format";
+import { PromptScore } from "./PromptScore";
 import { useCopy } from "./useCopy";
 
-type Tab = "prompt" | "diff" | "changes" | "assumptions" | "variants";
+type Tab = "prompt" | "diff" | "changes" | "assumptions" | "variants" | "method";
 
 export function EnhancedOutput({
   result,
@@ -34,6 +36,16 @@ export function EnhancedOutput({
   );
   const stats = useMemo(() => diffStats(diff), [diff]);
 
+  // Before/after linter scores, so the quality lift is visible on the output.
+  const enhancedLint = useMemo(
+    () => (result ? lintPrompt(result.enhancedPrompt, result.category) : null),
+    [result],
+  );
+  const rawScore = useMemo(
+    () => (result ? lintPrompt(rawPrompt, result.category).score : 0),
+    [result, rawPrompt],
+  );
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onReforge={onReforge} />;
   if (!result) return <EmptyState />;
@@ -54,6 +66,11 @@ export function EnhancedOutput({
       count: result.variants?.length ?? 0,
       show: (result.variants?.length ?? 0) > 0,
     },
+    {
+      id: "method",
+      label: result.method?.mode === "ensemble" ? "Ensemble" : "Reflexion",
+      show: !!result.method && result.method.mode !== "single",
+    },
   ];
   const activeTab = tabs.find((t) => t.id === tab && t.show) ? tab : "prompt";
 
@@ -67,7 +84,7 @@ export function EnhancedOutput({
         <span className="ml-auto flex items-center gap-3 text-2xs tabular-nums text-muted">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-ember" />
-            {result.model.name}
+            {modelLabel(result)}
           </span>
           {result.usage && (
             <span title="prompt / completion tokens">
@@ -107,9 +124,18 @@ export function EnhancedOutput({
       {/* body */}
       <div className="min-h-[220px] flex-1 overflow-auto p-3.5">
         {activeTab === "prompt" && (
-          <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-ink">
-            {result.enhancedPrompt}
-          </pre>
+          <div className="flex flex-col gap-3">
+            {enhancedLint && (
+              <PromptScore
+                result={enhancedLint}
+                label="Forged quality"
+                delta={enhancedLint.score - rawScore}
+              />
+            )}
+            <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-ink">
+              {result.enhancedPrompt}
+            </pre>
+          </div>
         )}
 
         {activeTab === "diff" && (
@@ -163,6 +189,8 @@ export function EnhancedOutput({
             ))}
           </ul>
         )}
+
+        {activeTab === "method" && result.method && <MethodView method={result.method} />}
       </div>
 
       {/* actions */}
@@ -208,6 +236,68 @@ export function EnhancedOutput({
         </button>
       </div>
     </div>
+  );
+}
+
+// Header label: friendly model name for single mode, or a compact method summary
+// (e.g. "3 models · ensemble", "gpt-oss-120b · reflexion") otherwise.
+function modelLabel(result: EnhanceResponse): string {
+  const m = result.method;
+  if (!m || m.mode === "single") return result.model.name;
+  const n = m.contributors?.length ?? 0;
+  const who = n > 0 ? `${n} models` : result.model.name;
+  return `${who} · ${m.mode}`;
+}
+
+function MethodView({ method }: { method: ForgeMethod }) {
+  if (method.mode === "ensemble") {
+    return (
+      <div className="flex flex-col gap-3 text-sm">
+        <div>
+          <div className="mb-1.5 text-2xs uppercase tracking-[0.18em] text-muted">
+            Contributing rewriters
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {method.contributors?.map((c) => (
+              <span
+                key={c.id}
+                className="rounded-sm border border-hairline bg-canvas px-2 py-0.5 text-xs text-ink-soft"
+              >
+                {c.name}
+              </span>
+            ))}
+          </div>
+        </div>
+        {method.judge && (
+          <div className="text-xs text-muted">
+            <span className="text-2xs uppercase tracking-[0.18em]">Judge</span>{" "}
+            <span className="text-ink-soft">{method.judge.name}</span>
+          </div>
+        )}
+        {method.rationale && (
+          <p className="text-sm leading-relaxed text-ink-soft">
+            <span className="bracket">[=]</span> {method.rationale}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // reflexion
+  return (
+    <ol className="flex flex-col gap-3">
+      {(method.rounds ?? []).map((r, i) => (
+        <li key={i} className="rounded border border-hairline bg-canvas p-2.5">
+          <div className="mb-1 text-2xs uppercase tracking-[0.18em] text-muted">
+            Round {i + 1} critique
+          </div>
+          <p className="text-sm leading-relaxed text-ink-soft">{r.critique}</p>
+        </li>
+      ))}
+      {(method.rounds?.length ?? 0) === 0 && (
+        <li className="text-xs text-muted">No critique rounds were recorded.</li>
+      )}
+    </ol>
   );
 }
 

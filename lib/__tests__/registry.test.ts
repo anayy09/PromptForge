@@ -13,16 +13,26 @@ describe("registry filters", () => {
     expect(getAll().length).toBeGreaterThan(10);
   });
 
-  it("rewriters only include text-output LLMs", () => {
+  it("rewriters only include general-purpose text LLMs", () => {
     const rw = getRewriters();
     expect(rw.length).toBeGreaterThan(0);
     for (const m of rw) {
-      expect(["Code", "General LLM", "Medical LLM"]).toContain(m.category);
+      expect(["General LLM", "Medical LLM"]).toContain(m.category);
       expect(m.outputModalities).toContain("Text");
     }
     // No image / embedding / tts / asr models are rewriters.
     expect(rw.some((m) => m.category === "Image Generation")).toBe(false);
     expect(rw.some((m) => m.category === "Embedding")).toBe(false);
+    // Code specialists are targets, not rewriters: Codestral is never a rewriter.
+    expect(rw.some((m) => m.id === "codestral-22b")).toBe(false);
+    expect(rw.some((m) => m.category === "Code")).toBe(false);
+  });
+
+  it("codestral remains selectable as a coding target", () => {
+    const targets = getTargetsForCategory("coding");
+    expect(targets.some((m) => m.id === "codestral-22b")).toBe(true);
+    // General LLMs are also valid coding targets.
+    expect(targets.some((m) => m.category === "General LLM")).toBe(true);
   });
 
   it("cheapest rewriter is the lowest combined price", () => {

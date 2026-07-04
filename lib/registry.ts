@@ -15,9 +15,12 @@ export type AppCategory =
   | "image-gen"
   | "agentic";
 
-// Categories whose models emit text and are therefore valid *rewriters*.
-// Image / TTS / ASR / embedding models are targets only, never rewriters.
-const TEXT_OUTPUT_CATEGORIES = new Set(["Code", "General LLM", "Medical LLM"]);
+// Categories whose models are valid *rewriters* (prompt enhancers). Code
+// specialists like Codestral are deliberately excluded: they are tuned for
+// writing code, not for the meta task of rewriting prompts. They remain
+// selectable as *targets* (see getTargetsForCategory). Image / TTS / ASR /
+// embedding models are targets only, never rewriters.
+const TEXT_OUTPUT_CATEGORIES = new Set(["General LLM", "Medical LLM"]);
 
 export function getAll(): RegistryModel[] {
   return models as RegistryModel[];
@@ -45,6 +48,10 @@ export function getCheapestRewriter(): RegistryModel | undefined {
 export function getTargetsForCategory(cat: AppCategory): RegistryModel[] {
   const all = models as RegistryModel[];
   switch (cat) {
+    case "coding":
+      // Code prompts can target code specialists (Codestral) or general LLMs.
+      // Codestral is a valid target here even though it is not a rewriter.
+      return all.filter((m) => m.category === "Code" || m.category === "General LLM");
     case "image-gen":
       return all.filter((m) => m.category === "Image Generation");
     case "medical":

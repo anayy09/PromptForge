@@ -31,7 +31,9 @@ export const CATEGORIES: Record<AppCategory, CategoryDef> = {
     tone: "ember",
     blurb: "Software tasks, refactors, debugging, code review.",
     targetNote: "Written for any code model or general LLM.",
-    defaultRewriterId: "codestral-22b",
+    // A strong reasoning LLM structures coding prompts better than a code
+    // specialist. Codestral is a code model, not a prompt enhancer.
+    defaultRewriterId: "gpt-oss-120b",
     rules: `Rewrite as a precise engineering task. Force: target language and version, exact input/output contract, constraints, edge cases, runtime/dependencies, and whether to return code only or code plus explanation. Keep any hard requirements verbatim. Do not solve the task; only specify it.`,
     starters: [
       "write a function to debounce another function",
@@ -132,13 +134,13 @@ export const CATEGORIES: Record<AppCategory, CategoryDef> = {
 };
 
 export const CATEGORY_ORDER: AppCategory[] = [
-  "coding",
   "general",
   "research",
-  "agentic",
-  "image-gen",
   "data-viz-multimodal",
   "medical",
+  "coding",
+  "agentic",
+  "image-gen",
 ];
 
 export function getCategory(id: AppCategory): CategoryDef {

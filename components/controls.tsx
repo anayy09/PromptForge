@@ -39,6 +39,7 @@ export function Select({
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        suppressHydrationWarning
         className="w-full appearance-none rounded border border-hairline bg-surface px-3 py-2 pr-8 font-mono text-xs text-ink transition-colors hover:border-hairline-strong focus:border-ember focus:outline-none"
       >
         {children}
