@@ -49,6 +49,7 @@ export function PromptInput({
         }}
         placeholder="Paste a rough prompt. It gets forged, not answered."
         spellCheck={false}
+        suppressHydrationWarning
         className="min-h-[220px] flex-1 resize-y rounded border border-hairline bg-sunken px-3.5 py-3 font-mono text-sm leading-relaxed text-ink placeholder:text-faint focus:border-ember focus:bg-canvas focus:outline-none"
       />
 
