@@ -85,7 +85,9 @@ const models = dataRows.map((row) => ({
   id: clean(col(row, "Model Name")),
   uuid: clean(col(row, "Model ID")),
   name: clean(col(row, "Model Name")),
-  path: clean(col(row, "Model Path")),
+  // "Model Path" (the backend HF slug) is deliberately not emitted: it would be
+  // bundled to the client via registry.ts and reveal the endpoint's model
+  // identity. The API call keys on `id`, so `path` is unused. Do not re-add it.
   costInput: cost(col(row, "Cost (Input)")),
   costOutput: cost(col(row, "Cost (Output)")),
   category: clean(col(row, "Category")),
