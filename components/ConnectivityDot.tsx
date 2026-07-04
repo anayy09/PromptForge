@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type State = { configured: boolean; host: string | null } | "loading" | "error";
+type State = { configured: boolean } | "loading" | "error";
 
 export function ConnectivityDot() {
   const [state, setState] = useState<State>("loading");
@@ -19,15 +19,14 @@ export function ConnectivityDot() {
   }, []);
 
   const ok = state !== "loading" && state !== "error" && state.configured;
-  const host =
-    state !== "loading" && state !== "error" && state.host ? state.host : null;
 
+  // The backend host is never surfaced; the indicator only reports reachability.
   const color = ok ? "bg-quench" : state === "loading" ? "bg-faint" : "bg-danger";
   const label = ok
-    ? `Endpoint connected: ${host ?? "configured"}`
+    ? "Forge online"
     : state === "loading"
-      ? "Checking endpoint"
-      : "Endpoint not configured";
+      ? "Checking status"
+      : "Forge offline";
 
   return (
     <span className="inline-flex items-center gap-2 text-2xs text-muted" title={label}>
@@ -37,7 +36,7 @@ export function ConnectivityDot() {
         )}
         <span className={`relative inline-flex h-2 w-2 rounded-full ${color}`} />
       </span>
-      <span className="hidden sm:inline tabular-nums">{host ?? (ok ? "online" : "offline")}</span>
+      <span className="hidden sm:inline tabular-nums">{ok ? "online" : "offline"}</span>
     </span>
   );
 }

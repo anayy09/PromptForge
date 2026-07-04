@@ -200,7 +200,7 @@ function EndpointStatus() {
         {state === null
           ? "Checking endpoint…"
           : ok
-            ? `Endpoint connected · ${state?.host}`
+            ? `Endpoint connected`
             : "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY (or API_KEY / BASE_URL)."}
       </span>
     </section>
