@@ -8,6 +8,19 @@ vi.mock("@/lib/client", () => ({
     usage: { promptTokens: 100, completionTokens: 50 },
   })),
   callVariants: vi.fn(async () => ["ALT A", "ALT B"]),
+  callReflexion: vi.fn(async () => ({
+    output: { enhancedPrompt: "REFLEXED PROMPT", changes: [], assumptions: [] },
+    usage: { promptTokens: 300, completionTokens: 150 },
+    trace: [{ critique: "too vague" }, { critique: "tightened scope" }],
+  })),
+  callEnsemble: vi.fn(async (ids: string[]) => ({
+    output: { enhancedPrompt: "MERGED PROMPT", changes: [], assumptions: [] },
+    usage: { promptTokens: 400, completionTokens: 200 },
+    cost: 0.0123,
+    contributors: ids.map((id) => ({ id, name: id })),
+    judge: { id: "gpt-oss-120b", name: "gpt-oss-120b" },
+    rationale: "combined the clearest structure",
+  })),
 }));
 
 import { POST } from "@/app/api/enhance/route";
@@ -57,5 +70,24 @@ describe("POST /api/enhance", () => {
     const res = await POST(req({ rawPrompt: "x", category: "coding", variants: true }));
     const json = await res.json();
     expect(json.variants).toEqual(["ALT A", "ALT B"]);
+  });
+
+  it("runs reflexion mode and returns the critique trace", async () => {
+    const res = await POST(req({ rawPrompt: "x", category: "coding", mode: "reflexion", rounds: 2 }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.enhancedPrompt).toBe("REFLEXED PROMPT");
+    expect(json.method.mode).toBe("reflexion");
+    expect(json.method.rounds).toHaveLength(2);
+  });
+
+  it("runs ensemble mode with contributors and its own summed cost", async () => {
+    const res = await POST(req({ rawPrompt: "x", category: "coding", mode: "ensemble" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.enhancedPrompt).toBe("MERGED PROMPT");
+    expect(json.method.mode).toBe("ensemble");
+    expect(json.method.contributors.length).toBeGreaterThanOrEqual(2);
+    expect(json.cost).toBe(0.0123);
   });
 });
