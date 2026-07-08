@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { TEMPLATES, type PromptTemplate } from "@/lib/templates";
-import { CATEGORIES, CATEGORY_ORDER } from "@/lib/categories";
+import { CATEGORY_ORDER } from "@/lib/categories";
+import { CATEGORY_META } from "@/components/categoryMeta";
 import type { AppCategory } from "@/lib/registry";
 import { useLoadIntoForge } from "@/components/useLoadIntoForge";
 import { useCopy } from "@/components/useCopy";
@@ -28,9 +29,10 @@ export default function LibraryPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-lg font-bold tracking-tight text-ink">Structure library</h1>
+        <h1 className="text-xl font-bold tracking-tight text-ink">Prompt library</h1>
         <p className="mt-0.5 text-xs text-muted">
-          Reusable prompt scaffolds. Load one into the forge, fill the <span className="text-steel">&lt;placeholders&gt;</span>, then enhance.
+          Reusable prompt templates. Load one into Enhance, fill in the{" "}
+          <span className="text-steel">&lt;placeholders&gt;</span>, then improve it.
         </p>
       </div>
 
@@ -39,20 +41,20 @@ export default function LibraryPage() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search structures, tags, contents…"
+          placeholder="Search templates, tags, contents…"
           spellCheck={false}
-          className="w-full rounded border border-hairline bg-sunken px-3 py-2 font-mono text-sm text-ink placeholder:text-faint focus:border-ember focus:bg-canvas focus:outline-none"
+          className="w-full rounded-lg border border-hairline bg-sunken px-3 py-2 text-sm text-ink placeholder:text-faint focus:border-ember focus:bg-canvas focus:outline-none"
         />
         <div className="flex flex-wrap gap-1.5">
           <Chip active={cat === "all"} onClick={() => setCat("all")}>
-            all ({TEMPLATES.length})
+            All ({TEMPLATES.length})
           </Chip>
           {CATEGORY_ORDER.map((id) => {
             const n = TEMPLATES.filter((t) => t.category === id).length;
             if (!n) return null;
             return (
               <Chip key={id} active={cat === id} onClick={() => setCat(id)}>
-                {CATEGORIES[id].glyph} {CATEGORIES[id].label} ({n})
+                {CATEGORY_META[id].label} ({n})
               </Chip>
             );
           })}
@@ -84,7 +86,7 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`rounded-sm border px-2.5 py-1 text-2xs font-medium transition-colors ${
+      className={`rounded-full border px-3 py-1 text-2xs font-medium transition-colors ${
         active
           ? "border-ember bg-ember/10 text-ember"
           : "border-hairline bg-surface text-muted hover:text-ink"
@@ -99,18 +101,17 @@ function TemplateRow({ t }: { t: PromptTemplate }) {
   const [open, setOpen] = useState(false);
   const load = useLoadIntoForge();
   const { copied, copy } = useCopy();
-  const cat = CATEGORIES[t.category];
+  const meta = CATEGORY_META[t.category];
+  const Icon = meta.icon;
 
   return (
     <div className="bg-surface">
       <div className="flex items-start gap-3 px-3.5 py-3">
-        <span className={`mt-0.5 font-mono text-sm ${cat.tone === "ember" ? "text-ember" : "text-steel"}`}>
-          {cat.glyph}
-        </span>
+        <Icon size={16} className="mt-0.5 text-muted" aria-hidden />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="text-sm font-medium text-ink">{t.title}</span>
-            <span className="text-2xs uppercase tracking-wider text-faint">{cat.label}</span>
+            <span className="text-2xs uppercase tracking-wider text-faint">{meta.label}</span>
           </div>
           <p className="mt-0.5 text-xs text-muted">{t.description}</p>
           <div className="mt-1.5 flex flex-wrap gap-1">

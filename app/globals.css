@@ -65,13 +65,18 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Body reads in a friendly sans; monospace is reserved for prompt text,
+   * diffs, and code where character alignment actually helps. */
   body {
     background-color: oklch(var(--canvas));
     color: oklch(var(--ink));
-    font-family: var(--font-mono);
-    font-feature-settings: "calt" 1, "ss01" 1;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  .font-mono {
+    font-feature-settings: "calt" 1, "ss01" 1;
   }
 
   ::selection {
@@ -105,9 +110,10 @@
 }
 
 @layer components {
-  /* Hairline-bordered block sitting flush on the canvas. The system's card. */
+  /* Soft, gently-raised card. The system's default surface — friendlier than a
+   * flat hairline block, with a low-contrast shadow that reads on both themes. */
   .panel {
-    @apply border border-hairline bg-surface;
+    @apply border border-hairline bg-surface shadow-soft;
   }
 
   /* Faint forge-grid texture used behind the hero / empty states. */

@@ -19,9 +19,9 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PromptForge — forge better prompts",
+  title: "PromptForge — better prompts, and a place to use them",
   description:
-    "Category-aware prompt enhancer. Rewrites rough prompts into high-quality, model-appropriate prompts. It rewrites prompts; it never answers them.",
+    "Enhance turns rough prompts into clear, model-ready ones. Chat is an everyday multimodal assistant. Two tools, one workspace.",
   applicationName: "PromptForge",
 };
 
