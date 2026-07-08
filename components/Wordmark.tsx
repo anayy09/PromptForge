@@ -30,9 +30,9 @@ export function Wordmark({ className = "" }: { className?: string }) {
           className="fill-ember"
         />
       </svg>
-      <span className="font-mono font-bold tracking-brand text-[0.9rem] leading-none">
-        <span className="text-ink">PROMPT</span>
-        <span className="text-ember">FORGE</span>
+      <span className="font-sans font-bold tracking-tight text-[1.02rem] leading-none">
+        <span className="text-ink">Prompt</span>
+        <span className="text-ember">Forge</span>
       </span>
     </span>
   );

@@ -59,31 +59,28 @@ export function OptimizeLab({
   };
 
   return (
-    <div className="rounded border border-hairline bg-surface">
+    <div className="rounded-xl border border-hairline bg-surface shadow-soft">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-3 py-2 text-left"
+        className="flex w-full items-center justify-between px-4 py-2.5 text-left"
       >
-        <span className="text-2xs uppercase tracking-[0.18em] text-muted">
-          <span className="bracket">{open ? "[-]" : "[+]"}</span> Auto-optimize
-        </span>
-        <span className="text-2xs text-faint">best-of-N, empirically tested</span>
+        <span className="text-xs font-medium text-muted">Find the best version</span>
+        <span className="text-2xs text-faint">tries several, keeps the winner</span>
       </button>
 
       {open && (
-        <div className="border-t border-hairline px-3 py-3">
+        <div className="border-t border-hairline px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-2xs leading-relaxed text-muted">
-              Forge 3 candidates, run each against the target, and rank by a judge. Returns the
-              tested winner.
+              Writes 3 versions, tries each on a real model, and keeps the one that performed best.
             </p>
             <button
               onClick={run}
               disabled={!canRun || state === "running"}
-              className="ml-auto rounded border border-ember-strong bg-ember px-3 py-1.5 text-xs font-semibold text-on-ember transition-colors hover:bg-ember-strong disabled:opacity-40"
+              className="ml-auto rounded-lg bg-ember px-3 py-1.5 text-xs font-semibold text-on-ember shadow-soft transition-colors hover:bg-ember-strong disabled:opacity-40"
             >
-              {state === "running" ? "Optimizing..." : "Run"}
+              {state === "running" ? "Working…" : "Find best"}
             </button>
           </div>
 

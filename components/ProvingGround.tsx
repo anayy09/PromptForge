@@ -56,18 +56,18 @@ export function ProvingGround({
   };
 
   return (
-    <div className="rounded border border-hairline bg-surface">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline px-3.5 py-2.5">
-        <span className="text-2xs uppercase tracking-[0.2em] text-ink">
-          <span className="bracket">[</span> Proving ground <span className="bracket">]</span>
+    <div className="rounded-xl border border-hairline bg-surface shadow-soft">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hairline px-4 py-3">
+        <span className="text-sm font-semibold text-ink">Test the difference</span>
+        <span className="text-2xs text-faint">
+          runs your original and improved prompt, then scores which answer is better
         </span>
-        <span className="text-2xs text-faint">runs raw vs. forged, then a judge scores them</span>
         <button
           onClick={run}
           disabled={!supported || state === "running"}
-          className="ml-auto rounded border border-steel bg-steel/[0.08] px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-steel/[0.15] disabled:opacity-40"
+          className="ml-auto rounded-lg border border-steel bg-steel/[0.08] px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-steel/[0.15] disabled:opacity-40"
         >
-          {state === "running" ? "Running..." : result ? "Run again" : "Run test"}
+          {state === "running" ? "Running…" : result ? "Run again" : "Run test"}
         </button>
       </div>
 

@@ -153,6 +153,74 @@ export async function callVariants(
   }
 }
 
+/**
+ * Chat (the answering surface). Streams assistant text token-by-token. This is
+ * deliberately a plain pass-through to the model with a light system message: it
+ * ANSWERS the user, unlike the rewriter path. Kept here only to reuse the one
+ * configured, server-only client so the key never leaves the server.
+ */
+export async function* streamChat(
+  modelName: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam[],
+): AsyncGenerator<string> {
+  const stream = await client().chat.completions.create({
+    model: modelName,
+    messages,
+    temperature: 0.7,
+    max_tokens: 2048,
+    stream: true,
+  });
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) yield delta;
+  }
+}
+
+/**
+ * Text-to-image (FLUX). Returns a data URL so the client renders it without a
+ * second fetch. Prefers base64; falls back to a remote URL if the endpoint
+ * ignores response_format. Throws on an empty result so the route can degrade.
+ */
+export async function generateImage(modelName: string, prompt: string): Promise<string> {
+  const res = await client().images.generate({
+    model: modelName,
+    prompt,
+    n: 1,
+    response_format: "b64_json",
+  });
+  const d = res.data?.[0];
+  if (d?.b64_json) return `data:image/png;base64,${d.b64_json}`;
+  if (d?.url) return d.url;
+  throw new Error("No image returned");
+}
+
+/**
+ * Speech-to-text (Whisper). Takes a browser-uploaded audio file and returns the
+ * transcript text.
+ */
+export async function transcribeAudio(modelName: string, file: File): Promise<string> {
+  const res = await client().audio.transcriptions.create({ model: modelName, file });
+  return (res as { text?: string }).text ?? "";
+}
+
+/**
+ * Text-to-speech (Kokoro). Returns MP3 bytes. `voice` is endpoint-specific; the
+ * caller supplies a default and failures degrade to a clean error upstream.
+ */
+export async function synthesizeSpeech(
+  modelName: string,
+  text: string,
+  voice: string,
+): Promise<ArrayBuffer> {
+  const res = await client().audio.speech.create({
+    model: modelName,
+    voice,
+    input: text,
+    response_format: "mp3",
+  });
+  return res.arrayBuffer();
+}
+
 const CLASSIFY_INSTRUCTION = `You are a router for a prompt-enhancement tool. Read the user's raw prompt and classify which category best fits, so the tool can select the right rewriter. Categories:
 - coding: software tasks, refactors, debugging, code review.
 - research: literature synthesis, methodology, academic analysis.

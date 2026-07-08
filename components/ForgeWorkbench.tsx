@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SlidersHorizontal, ChevronUp } from "lucide-react";
 import { CategoryPicker } from "./CategoryPicker";
+import { SimpleCategoryBar } from "./SimpleCategoryBar";
 import { PromptInput } from "./PromptInput";
 import { PromptScore } from "./PromptScore";
 import { ProvingGround } from "./ProvingGround";
@@ -13,18 +15,18 @@ import { ForgeButton } from "./ForgeButton";
 import { EnhancedOutput } from "./EnhancedOutput";
 import { useSettings } from "./providers";
 import { CATEGORIES } from "@/lib/categories";
-import { costFor, getById, type AppCategory } from "@/lib/registry";
+import { costFor, type AppCategory } from "@/lib/registry";
 import { estimateTokens } from "@/lib/tokens";
 import { lintPrompt } from "@/lib/lint";
 import { formatCost } from "@/lib/format";
-import type { EnhanceResponse, ForgeMode, Knobs } from "@/lib/schema";
+import type { ClassifyResponse, EnhanceResponse, ForgeMode, Knobs } from "@/lib/schema";
 import { newId, patchEntry, saveHistory, type HistoryEntry } from "@/lib/storage";
 import { slugTitle } from "@/lib/format";
 
 const LOAD_KEY = "promptforge.load";
 
 export function ForgeWorkbench() {
-  const { settings, hydrated } = useSettings();
+  const { settings, hydrated, update } = useSettings();
 
   const [category, setCategory] = useState<AppCategory>("general");
   const [rawPrompt, setRawPrompt] = useState("");
@@ -41,6 +43,12 @@ export function ForgeWorkbench() {
   const [entryId, setEntryId] = useState<string | null>(null);
   const [favorite, setFavorite] = useState(false);
 
+  // Simple-mode auto-detect state.
+  const [advanced, setAdvanced] = useState(false);
+  const [detecting, setDetecting] = useState(false);
+  const [autoDetected, setAutoDetected] = useState(false);
+  const manualCategory = useRef(false);
+
   const initialized = useRef(false);
 
   // Seed from persisted settings once, and honor a pending "load into forge".
@@ -54,7 +62,10 @@ export function ForgeWorkbench() {
       const pending = sessionStorage.getItem(LOAD_KEY);
       if (pending) {
         const parsed = JSON.parse(pending) as { rawPrompt?: string; category?: AppCategory };
-        if (parsed.category) cat = parsed.category;
+        if (parsed.category) {
+          cat = parsed.category;
+          manualCategory.current = true; // a loaded template knows its own type
+        }
         if (parsed.rawPrompt) text = parsed.rawPrompt;
         sessionStorage.removeItem(LOAD_KEY);
       }
@@ -66,15 +77,59 @@ export function ForgeWorkbench() {
     setRawPrompt(text);
     setKnobs(settings.knobs);
     setVariants(settings.requestVariants);
+    setAdvanced(settings.advancedMode);
     setRewriterId(settings.rewriterOverrides[cat] ?? CATEGORIES[cat].defaultRewriterId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  const onCategory = (c: AppCategory) => {
+  const applyCategory = (c: AppCategory) => {
     setCategory(c);
     setRewriterId(settings.rewriterOverrides[c] ?? CATEGORIES[c].defaultRewriterId);
     setTargetId("");
   };
+
+  // Advanced picker + simple dropdown both count as a manual choice: stop auto-detect.
+  const onCategory = (c: AppCategory) => {
+    manualCategory.current = true;
+    setAutoDetected(false);
+    applyCategory(c);
+  };
+
+  // Background auto-detect for simple mode. Debounced; never overrides a manual
+  // pick, and silently no-ops on failure so it can't block the main flow.
+  useEffect(() => {
+    if (advanced || manualCategory.current) return;
+    const text = rawPrompt.trim();
+    if (text.length < 15) {
+      setAutoDetected(false);
+      return;
+    }
+    let alive = true;
+    const t = setTimeout(async () => {
+      setDetecting(true);
+      try {
+        const res = await fetch("/api/classify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rawPrompt: text }),
+        });
+        if (!res.ok) return;
+        const d = (await res.json()) as ClassifyResponse;
+        if (!alive || manualCategory.current) return;
+        applyCategory(d.category);
+        setAutoDetected(true);
+      } catch {
+        /* silent: detection is a convenience, not a requirement */
+      } finally {
+        if (alive) setDetecting(false);
+      }
+    }, 700);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawPrompt, advanced]);
 
   const forge = useCallback(async () => {
     if (!rawPrompt.trim() || loading) return;
@@ -101,7 +156,7 @@ export function ForgeWorkbench() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Enhancement failed.");
+        setError(data.error ?? "Something went wrong. Please try again.");
         return;
       }
       const enhanced = data as EnhanceResponse;
@@ -130,7 +185,7 @@ export function ForgeWorkbench() {
       setEntryId(id);
       saveHistory(entry).catch(() => {});
     } catch {
-      setError("Network error. Is the dev server running?");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -143,6 +198,12 @@ export function ForgeWorkbench() {
     patchEntry(entryId, { favorite: next }).catch(() => {});
   };
 
+  const toggleAdvanced = () => {
+    const next = !advanced;
+    setAdvanced(next);
+    update({ advancedMode: next });
+  };
+
   // Rough pre-call cost preview.
   const estIn = estimateTokens(rawPrompt) + 260;
   const estOut = Math.min(900, Math.max(120, Math.round(estimateTokens(rawPrompt) * 1.4)));
@@ -153,14 +214,10 @@ export function ForgeWorkbench() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="panel rounded p-3.5">
-        <CategoryPicker value={category} onChange={onCategory} rawPrompt={rawPrompt} />
-      </section>
-
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Ore side */}
+        {/* Input side */}
         <div className="flex flex-col gap-3">
-          <section className="panel flex flex-1 flex-col rounded p-3.5">
+          <section className="panel flex flex-1 flex-col rounded-xl p-4">
             <PromptInput
               value={rawPrompt}
               onChange={setRawPrompt}
@@ -168,44 +225,63 @@ export function ForgeWorkbench() {
               starters={cat.starters}
               disabled={loading}
             />
+            {!advanced && (
+              <div className="mt-3 border-t border-hairline pt-3">
+                <SimpleCategoryBar
+                  value={category}
+                  onChange={onCategory}
+                  detecting={detecting}
+                  wasAutoDetected={autoDetected}
+                />
+              </div>
+            )}
           </section>
 
-          {rawPrompt.trim().length > 0 && <PromptScore result={rawLint} label="Raw quality" />}
+          {advanced && (
+            <>
+              <section className="panel rounded-xl p-4">
+                <CategoryPicker value={category} onChange={onCategory} rawPrompt={rawPrompt} />
+              </section>
+              {rawPrompt.trim().length > 0 && <PromptScore result={rawLint} label="Prompt quality" />}
+              <ModelPicker
+                category={category}
+                rewriterId={rewriterId}
+                targetId={targetId}
+                onRewriter={setRewriterId}
+                onTarget={setTargetId}
+              />
+              <ModeSelector mode={mode} onMode={setMode} rounds={rounds} onRounds={setRounds} />
+              <KnobPanel
+                knobs={knobs}
+                onChange={(patch) => setKnobs((k) => ({ ...k, ...patch }))}
+                variants={variants}
+                onVariants={setVariants}
+              />
+            </>
+          )}
 
-          <ModelPicker
-            category={category}
-            rewriterId={rewriterId}
-            targetId={targetId}
-            onRewriter={setRewriterId}
-            onTarget={setTargetId}
-          />
+          <ForgeButton onClick={forge} loading={loading} disabled={!rawPrompt.trim()} estCost={estCost} />
 
-          <ModeSelector mode={mode} onMode={setMode} rounds={rounds} onRounds={setRounds} />
+          <button
+            onClick={toggleAdvanced}
+            className="inline-flex items-center justify-center gap-1.5 self-center rounded-full px-3 py-1 text-2xs font-medium text-muted transition-colors hover:text-ink"
+          >
+            {advanced ? <ChevronUp size={13} aria-hidden /> : <SlidersHorizontal size={13} aria-hidden />}
+            {advanced ? "Hide advanced options" : "Advanced options"}
+          </button>
 
-          <KnobPanel
-            knobs={knobs}
-            onChange={(patch) => setKnobs((k) => ({ ...k, ...patch }))}
-            variants={variants}
-            onVariants={setVariants}
-          />
-
-          <ForgeButton
-            onClick={forge}
-            loading={loading}
-            disabled={!rawPrompt.trim()}
-            estCost={estCost}
-          />
-
-          <OptimizeLab
-            rawPrompt={rawPrompt}
-            category={category}
-            rewriterId={rewriterId}
-            targetId={targetId || undefined}
-            onUseWinner={setRawPrompt}
-          />
+          {advanced && (
+            <OptimizeLab
+              rawPrompt={rawPrompt}
+              category={category}
+              rewriterId={rewriterId}
+              targetId={targetId || undefined}
+              onUseWinner={setRawPrompt}
+            />
+          )}
         </div>
 
-        {/* Forged side */}
+        {/* Result side */}
         <div className="flex min-h-[420px] flex-col gap-3">
           <EnhancedOutput
             result={result}
@@ -215,8 +291,9 @@ export function ForgeWorkbench() {
             favorite={favorite}
             onToggleFavorite={toggleFavorite}
             onReforge={forge}
+            simple={!advanced}
           />
-          {result && !loading && (
+          {advanced && result && !loading && (
             <ProvingGround
               rawPrompt={rawPrompt}
               enhancedPrompt={result.enhancedPrompt}

@@ -129,6 +129,53 @@ export interface OptimizeResponse {
   costApproximate: boolean;
 }
 
+/**
+ * Chat: the sanctioned surface that DOES answer the user (the opposite of the
+ * enhancer, which never does). It is a physically separate path from the
+ * rewriter/meta-prompt code so hard rule #2 stays intact. Phase 2 is text-only;
+ * message content is a plain string and will gain multimodal parts in Phase 3.
+ */
+export const ChatRoleSchema = z.enum(["system", "user", "assistant"]);
+
+export const ChatMessageSchema = z.object({
+  role: ChatRoleSchema,
+  content: z.string().max(200000),
+  // Optional image attachments (data URLs) for vision-capable models. Ignored
+  // server-side when the selected model does not accept image input.
+  images: z.array(z.string().max(15_000_000)).max(6).optional(),
+});
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+
+export const ChatRequestSchema = z.object({
+  modelId: z.string(),
+  messages: z.array(ChatMessageSchema).min(1, "No messages").max(200),
+});
+export type ChatRequest = z.infer<typeof ChatRequestSchema>;
+
+// Text-to-image (FLUX). A separate surface from chat completions.
+export const ImageRequestSchema = z.object({
+  modelId: z.string(),
+  prompt: z.string().min(1, "Describe the image").max(4000),
+});
+export type ImageRequest = z.infer<typeof ImageRequestSchema>;
+
+export interface ImageResponse {
+  image: string; // data URL or remote URL
+  model: { id: string; name: string };
+}
+
+// Text-to-speech (Kokoro). Returns audio bytes, not JSON.
+export const SpeechRequestSchema = z.object({
+  text: z.string().min(1).max(8000),
+  voice: z.string().max(64).optional(),
+});
+export type SpeechRequest = z.infer<typeof SpeechRequestSchema>;
+
+// Speech-to-text (Whisper) sends multipart form-data, so it has no JSON schema.
+export interface TranscribeResponse {
+  text: string;
+}
+
 // The strict contract every rewriter must return.
 export const ChangeSchema = z.object({
   what: z.string(),

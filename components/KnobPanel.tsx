@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Field, Segmented, Toggle } from "./controls";
 import type { Knobs } from "@/lib/schema";
 
@@ -18,25 +19,30 @@ export function KnobPanel({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded border border-hairline bg-surface">
+    <div className="rounded-xl border border-hairline bg-surface shadow-soft">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-3 py-2 text-left"
+        className="flex w-full items-center justify-between px-4 py-2.5 text-left"
       >
-        <span className="text-2xs uppercase tracking-[0.18em] text-muted">
-          <span className="bracket">{open ? "[-]" : "[+]"}</span> Knobs
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted">
+          <SlidersHorizontal size={13} aria-hidden /> Fine-tune
         </span>
-        <span className="text-2xs text-faint">
+        <span className="inline-flex items-center gap-1.5 text-2xs text-faint">
           {knobs.strictness ?? "medium"} · {knobs.verbosity ?? "normal"} ·{" "}
-          {knobs.preserveWording ? "preserve" : "free"}
-          {variants ? " · +variants" : ""}
+          {knobs.preserveWording ? "keep wording" : "free rewrite"}
+          {variants ? " · alternatives" : ""}
+          <ChevronDown
+            size={13}
+            aria-hidden
+            className={`transition-transform ${open ? "rotate-180" : ""}`}
+          />
         </span>
       </button>
 
       {open && (
-        <div className="grid gap-3 border-t border-hairline px-3 py-3 sm:grid-cols-3">
-          <Field label="Strictness">
+        <div className="grid gap-3 border-t border-hairline px-4 py-3 sm:grid-cols-3">
+          <Field label="How much to change">
             <Segmented
               ariaLabel="Strictness"
               value={knobs.strictness ?? "medium"}
@@ -81,7 +87,7 @@ export function KnobPanel({
             <Toggle
               checked={variants}
               onChange={onVariants}
-              label="Generate variants (extra call)"
+              label="Also suggest alternatives (extra call)"
             />
           </div>
         </div>
