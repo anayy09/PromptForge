@@ -23,10 +23,10 @@ export function ConnectivityDot() {
   // The backend host is never surfaced; the indicator only reports reachability.
   const color = ok ? "bg-quench" : state === "loading" ? "bg-faint" : "bg-danger";
   const label = ok
-    ? "Forge online"
+    ? "Connected"
     : state === "loading"
       ? "Checking status"
-      : "Forge offline";
+      : "Offline";
 
   return (
     <span className="inline-flex items-center gap-2 text-2xs text-muted" title={label}>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 
 export function Field({
   label,
@@ -14,7 +15,7 @@ export function Field({
   return (
     <label className="flex flex-col gap-1.5">
       <span className="flex items-baseline justify-between">
-        <span className="text-2xs uppercase tracking-[0.18em] text-muted">{label}</span>
+        <span className="text-xs font-medium text-muted">{label}</span>
         {hint && <span className="text-2xs text-faint">{hint}</span>}
       </span>
       {children}
@@ -40,13 +41,15 @@ export function Select({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         suppressHydrationWarning
-        className="w-full appearance-none rounded border border-hairline bg-surface px-3 py-2 pr-8 font-mono text-xs text-ink transition-colors hover:border-hairline-strong focus:border-ember focus:outline-none"
+        className="w-full appearance-none rounded-lg border border-hairline bg-surface px-3 py-2 pr-8 text-sm text-ink transition-colors hover:border-hairline-strong focus:border-ember focus:outline-none"
       >
         {children}
       </select>
-      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-2xs text-muted">
-        ▾
-      </span>
+      <ChevronDown
+        size={14}
+        aria-hidden
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted"
+      />
     </div>
   );
 }
@@ -66,7 +69,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className="inline-flex w-full rounded border border-hairline bg-surface p-0.5"
+      className="inline-flex w-full rounded-full border border-hairline bg-surface p-0.5"
     >
       {options.map((opt) => {
         const active = opt.value === value;
@@ -76,7 +79,7 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(opt.value)}
-            className={`flex-1 rounded-sm px-2 py-1 text-2xs font-medium capitalize transition-colors ${
+            className={`flex-1 rounded-full px-2 py-1 text-2xs font-medium transition-colors ${
               active ? "bg-ember/15 text-ember" : "text-muted hover:text-ink"
             }`}
           >

@@ -32,12 +32,16 @@ export function ModelPicker({
   const targets = showTarget ? getTargetsForCategory(category) : [];
 
   return (
-    <div className={`grid gap-3 ${showTarget ? "sm:grid-cols-2" : ""}`}>
+    <div
+      className={`grid gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-soft ${
+        showTarget ? "sm:grid-cols-2" : ""
+      }`}
+    >
       <Field
-        label="Rewriter"
+        label="Model that rewrites"
         hint={
           isDefault ? (
-            <span className="text-ember">default</span>
+            <span className="text-ember">recommended</span>
           ) : (
             <button className="text-ember hover:underline" onClick={() => onRewriter(CATEGORIES[category].defaultRewriterId)}>
               reset
@@ -45,7 +49,7 @@ export function ModelPicker({
           )
         }
       >
-        <Select value={rewriterId} onChange={onRewriter} ariaLabel="Rewriter model">
+        <Select value={rewriterId} onChange={onRewriter} ariaLabel="Model that rewrites">
           {rewriters.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name} · {m.category}
@@ -56,7 +60,7 @@ export function ModelPicker({
       </Field>
 
       {showTarget && (
-        <Field label="Target" hint={<span className="text-steel">the prompt is tuned for this</span>}>
+        <Field label="Optimized for" hint={<span className="text-steel">where you will use it</span>}>
           <Select value={targetId} onChange={onTarget} ariaLabel="Target model">
             <option value="">auto</option>
             {targets.map((m) => (
