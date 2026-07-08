@@ -1,12 +1,13 @@
 "use client";
 
+import { Sun, Moon, MonitorSmartphone, type LucideIcon } from "lucide-react";
 import { useSettings } from "./providers";
 import type { Settings } from "@/lib/storage";
 
-const OPTIONS: { value: Settings["theme"]; label: string; glyph: string }[] = [
-  { value: "light", label: "Light", glyph: "☀" },
-  { value: "dark", label: "Dark", glyph: "☾" },
-  { value: "system", label: "System", glyph: "◐" },
+const OPTIONS: { value: Settings["theme"]; label: string; icon: LucideIcon }[] = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: MonitorSmartphone },
 ];
 
 export function ThemeToggle() {
@@ -16,10 +17,11 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Theme"
-      className="inline-flex items-center rounded border border-hairline bg-surface p-0.5"
+      className="inline-flex items-center rounded-full border border-hairline bg-surface p-0.5"
     >
       {OPTIONS.map((opt) => {
         const active = hydrated && settings.theme === opt.value;
+        const Icon = opt.icon;
         return (
           <button
             key={opt.value}
@@ -27,13 +29,13 @@ export function ThemeToggle() {
             aria-checked={active}
             title={opt.label}
             onClick={() => update({ theme: opt.value })}
-            className={`h-6 w-6 rounded-sm text-xs leading-none transition-colors ${
+            className={`grid h-7 w-7 place-items-center rounded-full transition-colors ${
               active
                 ? "bg-ember/15 text-ember"
                 : "text-muted hover:text-ink hover:bg-surface-2"
             }`}
           >
-            <span aria-hidden>{opt.glyph}</span>
+            <Icon size={14} aria-hidden strokeWidth={2} />
           </button>
         );
       })}
