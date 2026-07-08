@@ -37,6 +37,50 @@ export function getRewriters(): RegistryModel[] {
   );
 }
 
+// Categories usable as conversational chat models (they answer, in text). This
+// is the Chat product's model pool — broader than rewriters because a code
+// specialist is a fine chat model even though it is a poor prompt rewriter.
+const CHAT_CATEGORIES = new Set(["General LLM", "Medical LLM", "Code"]);
+
+/**
+ * Text-output conversational models for the Chat product. `visionOnly` narrows
+ * to models that also accept image input (used by Phase 3's vision mode).
+ */
+export function getChatModels(opts?: { visionOnly?: boolean }): RegistryModel[] {
+  return (models as RegistryModel[]).filter((m) => {
+    if (!CHAT_CATEGORIES.has(m.category)) return false;
+    if (!m.outputModalities.includes("Text")) return false;
+    if (opts?.visionOnly && !m.inputModalities.includes("Image")) return false;
+    return true;
+  });
+}
+
+/** Text-to-image models (FLUX) for the Chat product's image-generation mode. */
+export function getImageModels(): RegistryModel[] {
+  return (models as RegistryModel[]).filter((m) => m.category === "Image Generation");
+}
+
+/** First available text-to-speech model, or undefined if the registry has none. */
+export function getSpeechModel(): RegistryModel | undefined {
+  return (models as RegistryModel[]).find((m) => m.category.startsWith("TTS"));
+}
+
+/** First available speech-to-text model, or undefined if the registry has none. */
+export function getTranscribeModel(): RegistryModel | undefined {
+  return (models as RegistryModel[]).find((m) => m.category.startsWith("ASR"));
+}
+
+/** Whether a model accepts image input (used to gate vision attachments). */
+export function supportsVision(id: string): boolean {
+  const m = getById(id);
+  return !!m && m.inputModalities.includes("Image");
+}
+
+/** Whether a model produces images (used to switch Chat into generate mode). */
+export function isImageModel(id: string): boolean {
+  return getById(id)?.category === "Image Generation";
+}
+
 /** Cheapest text rewriter, used as a fallback when a default is missing. */
 export function getCheapestRewriter(): RegistryModel | undefined {
   return getRewriters()

@@ -6,6 +6,12 @@ import {
   getCheapestRewriter,
   getTargetsForCategory,
   costFor,
+  getChatModels,
+  getImageModels,
+  getSpeechModel,
+  getTranscribeModel,
+  supportsVision,
+  isImageModel,
 } from "@/lib/registry";
 
 describe("registry filters", () => {
@@ -49,6 +55,47 @@ describe("registry filters", () => {
   it("multimodal targets accept more than one input modality", () => {
     const t = getTargetsForCategory("data-viz-multimodal");
     expect(t.every((m) => m.inputModalities.length > 1)).toBe(true);
+  });
+});
+
+describe("chat + multimodal helpers", () => {
+  it("chat models are text-output conversational models (incl. code specialists)", () => {
+    const chat = getChatModels();
+    expect(chat.length).toBeGreaterThan(0);
+    for (const m of chat) {
+      expect(["General LLM", "Medical LLM", "Code"]).toContain(m.category);
+      expect(m.outputModalities).toContain("Text");
+    }
+    // Codestral is a poor rewriter but a fine chat model.
+    expect(chat.some((m) => m.id === "codestral-22b")).toBe(true);
+    // Image / embedding models never appear in the chat pool.
+    expect(chat.some((m) => m.category === "Image Generation")).toBe(false);
+    expect(chat.some((m) => m.category === "Embedding")).toBe(false);
+  });
+
+  it("vision filter narrows to image-input models", () => {
+    const vision = getChatModels({ visionOnly: true });
+    expect(vision.length).toBeGreaterThan(0);
+    expect(vision.every((m) => m.inputModalities.includes("Image"))).toBe(true);
+  });
+
+  it("image models are diffusion models and are flagged by isImageModel", () => {
+    const imgs = getImageModels();
+    expect(imgs.length).toBeGreaterThan(0);
+    expect(imgs.every((m) => m.category === "Image Generation")).toBe(true);
+    expect(isImageModel(imgs[0].id)).toBe(true);
+    expect(isImageModel("gpt-oss-120b")).toBe(false);
+  });
+
+  it("supportsVision reflects image input modality", () => {
+    expect(supportsVision("gpt-oss-120b")).toBe(true); // Text+Image
+    expect(supportsVision("gpt-oss-20b")).toBe(false); // Text only
+    expect(supportsVision("nope")).toBe(false);
+  });
+
+  it("finds the speech and transcription models", () => {
+    expect(getSpeechModel()?.category.startsWith("TTS")).toBe(true);
+    expect(getTranscribeModel()?.category.startsWith("ASR")).toBe(true);
   });
 });
 
