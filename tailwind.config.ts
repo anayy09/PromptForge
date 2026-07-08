@@ -45,15 +45,28 @@ const config: Config = {
         sans: ["var(--font-sans)", "var(--font-mono)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        sm: "3px",
-        DEFAULT: "4px",
-        md: "6px",
+        // Softened scale: friendlier, more consumer-grade corners. Existing
+        // `rounded` / `rounded-sm` usages inherit the larger radii automatically.
+        sm: "6px",
+        DEFAULT: "10px",
+        md: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "28px",
+      },
+      boxShadow: {
+        // Low-contrast, warm-tinted elevation. Kept subtle so the UI feels
+        // calm rather than "floaty".
+        soft: "0 1px 2px oklch(0.2 0.02 50 / 0.04), 0 2px 8px oklch(0.2 0.02 50 / 0.05)",
+        card: "0 2px 4px oklch(0.2 0.02 50 / 0.05), 0 8px 24px oklch(0.2 0.02 50 / 0.07)",
+        lifted: "0 6px 16px oklch(0.2 0.02 50 / 0.08), 0 16px 40px oklch(0.2 0.02 50 / 0.10)",
+        "ember-glow": "0 4px 16px oklch(var(--ember) / 0.28)",
       },
       fontSize: {
         "2xs": ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.02em" }],
       },
       letterSpacing: {
-        brand: "0.18em",
+        brand: "0.16em",
       },
       keyframes: {
         "ember-pulse": {
