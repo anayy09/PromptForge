@@ -373,18 +373,17 @@
     "costInput": 0.06,
     "costOutput": 0.15,
     "category": "General LLM",
-    "architecture": "Dense Transformer",
-    "size": "120B",
+    "architecture": "MoE (Mixture of Experts)",
+    "size": "117B total / 5.1B active",
     "inputModalities": [
-      "Text",
-      "Image"
+      "Text"
     ],
     "outputModalities": [
       "Text"
     ],
     "contextWindow": "128K tokens",
-    "primaryUseCases": "Complex Reasoning, Vision, Code, Agentic Workflows",
-    "bestFor": "Top-tier open model; multimodal 120B at sub-$0.10/MTok combined cost"
+    "primaryUseCases": "Complex Reasoning, Code, Agentic Workflows, Tool Use",
+    "bestFor": "Top-tier open reasoning model; text-only MoE with configurable reasoning effort"
   },
   {
     "id": "sfr-embedding-mistral",

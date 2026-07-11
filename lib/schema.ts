@@ -143,6 +143,18 @@ export const ChatMessageSchema = z.object({
   // Optional image attachments (data URLs) for vision-capable models. Ignored
   // server-side when the selected model does not accept image input.
   images: z.array(z.string().max(15_000_000)).max(6).optional(),
+  // Optional non-image file attachments (read as text, injected as context).
+  files: z
+    .array(
+      z.object({
+        name: z.string().max(256),
+        type: z.string().max(128),
+        size: z.number(),
+        content: z.string().max(500_000),
+      }),
+    )
+    .max(10)
+    .optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 

@@ -10,6 +10,14 @@ const GROUP_LABEL: Record<string, string> = {
 };
 const GROUP_ORDER = ["General LLM", "Code", "Medical LLM"];
 
+function modalityBadges(modalities: string[]): string {
+  const badges: string[] = [];
+  if (modalities.includes("Image")) badges.push("📷 vision");
+  if (modalities.includes("Video")) badges.push("🎬 video");
+  if (modalities.includes("Audio")) badges.push("🔊 audio");
+  return badges.join(" · ");
+}
+
 export function ChatModelPicker({
   value,
   onChange,
@@ -21,7 +29,6 @@ export function ChatModelPicker({
   const images = getImageModels();
   const groups = GROUP_ORDER.filter((g) => chat.some((m) => m.category === g));
   const current = getById(value);
-  const vision = !!current && current.inputModalities.includes("Image");
   const isImage = current?.category === "Image Generation";
 
   return (
@@ -41,7 +48,6 @@ export function ChatModelPicker({
                 .map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}
-                    {m.inputModalities.includes("Image") ? "  (sees images)" : ""}
                   </option>
                 ))}
             </optgroup>
@@ -63,10 +69,13 @@ export function ChatModelPicker({
       {current && (
         <p className="px-1 text-2xs leading-relaxed text-faint">
           {isImage ? "Generates images from a description" : current.bestFor}
-          {vision && !isImage ? " · accepts image uploads" : ""} ·{" "}
-          <span className="tabular-nums">{priceLabel(current.id)}</span>
+          {!isImage && modalityBadges(current.inputModalities)
+            ? ` · ${modalityBadges(current.inputModalities)}`
+            : ""}{" "}
+          · <span className="tabular-nums">{priceLabel(current.id)}</span>
         </p>
       )}
     </div>
   );
 }
+

@@ -12,6 +12,29 @@ export const maxDuration = 60;
 const SYSTEM =
   "You are a helpful, concise assistant inside PromptForge. Answer directly and format with Markdown when it helps. If a request is ambiguous, make a reasonable assumption and say so briefly.";
 
+/**
+ * Format file attachments as context blocks that get prepended to the user's
+ * text message. Each file is wrapped in a fenced block with its filename, so
+ * the model sees it as clearly delineated reference material.
+ */
+function formatFileContext(
+  files: { name: string; type: string; size: number; content: string }[],
+): string {
+  return files
+    .map((f) => {
+      const ext = f.name.includes(".") ? f.name.split(".").pop() ?? "" : "";
+      const lang = ext || "text";
+      return `📎 **${f.name}** (${formatSize(f.size)}):\n\`\`\`${lang}\n${f.content}\n\`\`\``;
+    })
+    .join("\n\n");
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
@@ -45,17 +68,26 @@ export async function POST(req: Request) {
 
   // Vision: when the model accepts image input, fold a user turn's attachments
   // into multimodal content parts. Otherwise images are dropped (text only).
+  // Files: text file contents are always prepended to the message content as
+  // context blocks, regardless of model — they are plain text.
   const vision = supportsVision(model.id);
   const chatMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM },
     ...messages.map((m): OpenAI.Chat.ChatCompletionMessageParam => {
+      // Build the text content, prepending any file context
+      let textContent = m.content;
+      if (m.role === "user" && m.files?.length) {
+        const fileContext = formatFileContext(m.files);
+        textContent = fileContext + (textContent ? `\n\n${textContent}` : "");
+      }
+
       if (vision && m.role === "user" && m.images?.length) {
         const parts: OpenAI.Chat.ChatCompletionContentPart[] = [];
-        if (m.content) parts.push({ type: "text", text: m.content });
+        if (textContent) parts.push({ type: "text", text: textContent });
         for (const url of m.images) parts.push({ type: "image_url", image_url: { url } });
         return { role: "user", content: parts };
       }
-      return { role: m.role, content: m.content };
+      return { role: m.role, content: textContent };
     }),
   ];
 

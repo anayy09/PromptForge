@@ -1,10 +1,40 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Wand2, Copy, Check, Volume2, Loader2, Download } from "lucide-react";
+import {
+  Wand2,
+  Copy,
+  Check,
+  Volume2,
+  Loader2,
+  Download,
+  FileText,
+  FileCode,
+  File as FileIcon,
+} from "lucide-react";
 import type { ChatTurn } from "@/lib/storage";
 import { Markdown } from "./Markdown";
 import { useCopy } from "../useCopy";
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileChipIcon(name: string) {
+  const ext = name.includes(".") ? `.${name.split(".").pop()?.toLowerCase()}` : "";
+  const codeExts = new Set([
+    ".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".c", ".cpp", ".go",
+    ".rs", ".rb", ".php", ".swift", ".kt", ".cs", ".html", ".css",
+    ".scss", ".vue", ".svelte", ".sh", ".sql", ".json", ".xml", ".yaml",
+    ".yml",
+  ]);
+  if (codeExts.has(ext)) return <FileCode size={14} aria-hidden />;
+  const textExts = new Set([".txt", ".md", ".csv", ".log", ".env", ".toml", ".ini", ".cfg"]);
+  if (textExts.has(ext)) return <FileText size={14} aria-hidden />;
+  return <FileIcon size={14} aria-hidden />;
+}
 
 function ImageGrid({ images, downloadable }: { images: string[]; downloadable?: boolean }) {
   return (
@@ -23,6 +53,27 @@ function ImageGrid({ images, downloadable }: { images: string[]; downloadable?: 
               <Download size={14} aria-hidden />
             </a>
           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FileChips({
+  files,
+}: {
+  files: { name: string; type: string; size: number; content: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {files.map((f, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-2 py-1 text-xs text-ink-soft"
+        >
+          <span className="text-muted">{fileChipIcon(f.name)}</span>
+          <span className="max-w-[140px] truncate font-medium">{f.name}</span>
+          <span className="text-2xs tabular-nums text-faint">{formatSize(f.size)}</span>
         </div>
       ))}
     </div>
@@ -76,6 +127,11 @@ export function MessageBubble({
         {turn.attachments && turn.attachments.length > 0 && (
           <div className="max-w-[85%]">
             <ImageGrid images={turn.attachments} />
+          </div>
+        )}
+        {turn.files && turn.files.length > 0 && (
+          <div className="max-w-[85%]">
+            <FileChips files={turn.files} />
           </div>
         )}
         {turn.content && (

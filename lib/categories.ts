@@ -63,7 +63,7 @@ export const CATEGORIES: Record<AppCategory, CategoryDef> = {
     tone: "steel",
     blurb: "Everyday chat, drafting, explanation, planning.",
     targetNote: "Written for any general LLM.",
-    defaultRewriterId: "llama-3.3-70b-instruct",
+    defaultRewriterId: "gemma-4-31b-it",
     rules: `Tighten a vague ask into a concrete deliverable. Force: output format, audience, length, and success criteria. Make minimal changes to the user's wording; add structure, do not replace their voice.`,
     starters: [
       "help me write an email declining a meeting",
@@ -108,7 +108,7 @@ export const CATEGORIES: Record<AppCategory, CategoryDef> = {
     tone: "ember",
     blurb: "Text-to-image prompts, FLUX-style diffusion.",
     targetNote: "Rewrites text; the target is a FLUX diffusion model.",
-    defaultRewriterId: "llama-3.3-70b-instruct",
+    defaultRewriterId: "gemma-4-31b-it",
     rules: `Expand into a dense, comma-structured text-to-image prompt for a FLUX-style diffusion model. Cover subject, composition, lighting, style, medium, color, and detail/lens. Add a short negative-prompt suggestion. Keep it concrete and visual; avoid abstract adjectives and narrative sentences.`,
     starters: [
       "a cozy reading nook",
@@ -123,7 +123,7 @@ export const CATEGORIES: Record<AppCategory, CategoryDef> = {
     tone: "ember",
     blurb: "Tool-use, multi-step workflows, structured output.",
     targetNote: "Written for an agentic-capable LLM.",
-    defaultRewriterId: "nemotron-3-super-120b-a12b",
+    defaultRewriterId: "gpt-oss-120b",
     rules: `Rewrite as an agentic task specification. Force: the goal, available tools (use placeholders if unknown), stepwise decomposition, stop conditions, error handling, and a strict output schema. Prefer structured/JSON output where the task allows. Define what "done" means.`,
     starters: [
       "build an agent that triages my inbox",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { ChatModelPicker } from "./ChatModelPicker";
-import { Composer } from "./Composer";
+import { Composer, MAX_FILES, MAX_FILE_SIZE, isTextFile, type AttachedFile } from "./Composer";
 import { MessageBubble } from "./MessageBubble";
 import { ConversationSidebar } from "./ConversationSidebar";
 import {
@@ -24,12 +24,13 @@ import {
   type ChatTurn,
 } from "@/lib/storage";
 
-// Preference order for the default everyday chat model: capable but not the most
-// expensive. Falls back to whatever chat models the registry actually ships.
+// Preference order for the default everyday chat model. Gemma 4 is the primary
+// default — multimodal, 256K context, well-priced. Falls back through the list
+// if the registry does not include a given model.
 const CHAT_DEFAULTS = [
-  "llama-3.3-70b-instruct",
+  "gemma-4-31b-it",
   "gpt-oss-120b",
-  "nemotron-3-super-120b-a12b",
+  "llama-3.3-70b-instruct",
   "gpt-oss-20b",
 ];
 function defaultChatModel(): string {
@@ -53,6 +54,15 @@ function readFileAsDataURL(file: File): Promise<string> {
   });
 }
 
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsText(file);
+  });
+}
+
 const LOAD_KEY = "promptforge.load";
 
 export function ChatView() {
@@ -63,7 +73,7 @@ export function ChatView() {
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [modelId, setModelId] = useState<string>("");
   const [input, setInput] = useState("");
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -79,7 +89,7 @@ export function ChatView() {
   const canTranscribe = useMemo(() => !!getTranscribeModel(), []);
   const canTts = useMemo(() => !!getSpeechModel(), []);
   const imageMode = isImageModel(modelId);
-  const canAttach = supportsVision(modelId);
+  const visionCapable = supportsVision(modelId);
 
   // Seed default model + load conversation list once.
   useEffect(() => {
@@ -92,10 +102,10 @@ export function ChatView() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // Dropping to a non-vision or image-gen model clears pending attachments.
+  // When switching to image-gen mode, drop all attachments (not applicable).
   useEffect(() => {
-    if (!canAttach) setAttachments([]);
-  }, [canAttach]);
+    if (imageMode) setAttachments([]);
+  }, [imageMode]);
 
   const newChat = useCallback(() => {
     abortRef.current?.abort();
@@ -134,9 +144,10 @@ export function ChatView() {
   const persist = useCallback(
     async (finalMessages: ChatTurn[], id: string, createdAt: number) => {
       const firstUser = finalMessages.find((m) => m.role === "user");
+      const hasAttachments = firstUser?.attachments?.length || firstUser?.files?.length;
       const conv: Conversation = {
         id,
-        title: titleFrom(firstUser?.content ?? "", firstUser?.attachments?.length ? "Image chat" : "New chat"),
+        title: titleFrom(firstUser?.content ?? "", hasAttachments ? "File chat" : "New chat"),
         createdAt,
         updatedAt: Date.now(),
         modelId,
@@ -148,17 +159,32 @@ export function ChatView() {
     [modelId],
   );
 
+  // Handle attaching files — reads images as data URLs, text files as text.
   const attach = useCallback(async (files: FileList) => {
-    const urls: string[] = [];
+    const results: AttachedFile[] = [];
     for (const f of Array.from(files)) {
-      if (!f.type.startsWith("image/")) continue;
-      try {
-        urls.push(await readFileAsDataURL(f));
-      } catch {
-        /* skip unreadable file */
+      if (f.size > MAX_FILE_SIZE) continue; // skip oversized files
+
+      if (f.type.startsWith("image/")) {
+        try {
+          const dataUrl = await readFileAsDataURL(f);
+          results.push({ dataUrl, name: f.name, type: f.type, size: f.size, isImage: true });
+        } catch {
+          /* skip unreadable file */
+        }
+      } else if (isTextFile(f)) {
+        try {
+          const content = await readFileAsText(f);
+          results.push({ dataUrl: content, name: f.name, type: f.type, size: f.size, isImage: false });
+        } catch {
+          /* skip unreadable file */
+        }
       }
+      // Silently skip binary files we can't handle
     }
-    if (urls.length) setAttachments((prev) => [...prev, ...urls].slice(0, 6));
+    if (results.length) {
+      setAttachments((prev) => [...prev, ...results].slice(0, MAX_FILES));
+    }
   }, []);
 
   const send = useCallback(async () => {
@@ -170,12 +196,19 @@ export function ChatView() {
     createdAtRef.current = createdAt;
     if (!activeId) setActiveId(convId);
 
+    // Separate image and file attachments
+    const imageUrls = attachments.filter((a) => a.isImage).map((a) => a.dataUrl);
+    const fileData = attachments
+      .filter((a) => !a.isImage)
+      .map((a) => ({ name: a.name, type: a.type, size: a.size, content: a.dataUrl }));
+
     const userTurn: ChatTurn = {
       id: newId(),
       role: "user",
       content: text,
       ts: Date.now(),
-      attachments: attachments.length ? attachments : undefined,
+      attachments: imageUrls.length ? imageUrls : undefined,
+      files: fileData.length ? fileData : undefined,
     };
     const assistantId = newId();
     const modelName = getById(modelId)?.name;
@@ -227,7 +260,7 @@ export function ChatView() {
       return;
     }
 
-    // ---- Text / vision chat (streaming) ----
+    // ---- Text / vision / file chat (streaming) ----
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -238,7 +271,10 @@ export function ChatView() {
           messages: base.map((m) => ({
             role: m.role,
             content: m.content,
-            images: m.role === "user" ? m.attachments : undefined,
+            // Only send images if the model supports vision
+            images: m.role === "user" && visionCapable ? m.attachments : undefined,
+            // Always send file context (injected as text server-side)
+            files: m.role === "user" ? m.files : undefined,
           })),
         }),
       });
@@ -281,7 +317,7 @@ export function ChatView() {
         setMessages(base);
       }
     }
-  }, [input, attachments, streaming, modelId, activeId, messages, imageMode, persist]);
+  }, [input, attachments, streaming, modelId, activeId, messages, imageMode, visionCapable, persist]);
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
@@ -406,7 +442,6 @@ export function ChatView() {
             attachments={attachments}
             onAttachFiles={attach}
             onRemoveAttachment={(i) => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
-            canAttach={canAttach}
             canVoice={canTranscribe}
             recording={recording}
             transcribing={transcribing}

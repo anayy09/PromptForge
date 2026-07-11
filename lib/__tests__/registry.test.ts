@@ -88,7 +88,8 @@ describe("chat + multimodal helpers", () => {
   });
 
   it("supportsVision reflects image input modality", () => {
-    expect(supportsVision("gpt-oss-120b")).toBe(true); // Text+Image
+    expect(supportsVision("gemma-3-27b-it")).toBe(true); // Text+Image
+    expect(supportsVision("gpt-oss-120b")).toBe(false); // Text only (MoE)
     expect(supportsVision("gpt-oss-20b")).toBe(false); // Text only
     expect(supportsVision("nope")).toBe(false);
   });
