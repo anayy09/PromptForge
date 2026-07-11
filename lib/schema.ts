@@ -165,9 +165,14 @@ export const ChatRequestSchema = z.object({
 export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 // Text-to-image (FLUX). A separate surface from chat completions.
+// Backend (litellm/vllm) enforces a 1000-char prompt limit on FLUX models.
+// When `image` is provided, the route uses the OpenAI-compatible /v1/images/edits
+// endpoint for reference-based editing instead of /v1/images/generations.
 export const ImageRequestSchema = z.object({
   modelId: z.string(),
-  prompt: z.string().min(1, "Describe the image").max(4000),
+  prompt: z.string().min(1, "Describe the image").max(1000, "Image prompts must be under 1,000 characters"),
+  // Optional reference image (base64 data URL) for editing via images/edits.
+  image: z.string().max(15_000_000).optional(),
 });
 export type ImageRequest = z.infer<typeof ImageRequestSchema>;
 

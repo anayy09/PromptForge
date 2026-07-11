@@ -102,9 +102,10 @@ export function ChatView() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // When switching to image-gen mode, drop all attachments (not applicable).
+  // When switching to image-gen mode, keep image attachments (they become
+  // reference images for the /v1/images/edits endpoint) but drop text files.
   useEffect(() => {
-    if (imageMode) setAttachments([]);
+    if (imageMode) setAttachments((prev) => prev.filter((a) => a.isImage));
   }, [imageMode]);
 
   const newChat = useCallback(() => {
@@ -230,14 +231,31 @@ export function ChatView() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // ---- Image generation mode ----
+    // ---- Image generation / editing mode ----
     if (imageMode) {
       try {
+        // Reference image for the /v1/images/edits endpoint. Priority:
+        // 1. Explicitly attached image from the user
+        // 2. Last assistant-generated image in the conversation (conversational editing)
+        // 3. undefined → pure generation via /v1/images/generations
+        let refImage: string | undefined;
+        if (imageUrls.length > 0) {
+          refImage = imageUrls[0];
+        } else {
+          // Walk messages backwards to find the last generated image
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const m = messages[i];
+            if (m.role === "assistant" && m.images?.length) {
+              refImage = m.images[m.images.length - 1];
+              break;
+            }
+          }
+        }
         const res = await fetch("/api/image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
-          body: JSON.stringify({ modelId, prompt: text }),
+          body: JSON.stringify({ modelId, prompt: text, image: refImage }),
         });
         const data = await res.json();
         if (!res.ok) {

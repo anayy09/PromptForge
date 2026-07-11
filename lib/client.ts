@@ -195,6 +195,35 @@ export async function generateImage(modelName: string, prompt: string): Promise<
 }
 
 /**
+ * Image editing (FLUX via OpenAI-compatible /v1/images/edits). Takes a
+ * reference image (base64 data URL) and a text prompt describing the edit.
+ * Converts the data URL to a File for the multipart upload the endpoint expects.
+ */
+export async function editImage(
+  modelName: string,
+  prompt: string,
+  imageDataUrl: string,
+): Promise<string> {
+  // Convert base64 data URL → File for the OpenAI images.edit multipart form.
+  const [header, b64] = imageDataUrl.split(",");
+  const mime = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
+  const binary = Buffer.from(b64, "base64");
+  const file = new File([binary], "input.png", { type: mime });
+
+  const res = await client().images.edit({
+    model: modelName,
+    image: file,
+    prompt,
+    n: 1,
+    response_format: "b64_json",
+  });
+  const d = res.data?.[0];
+  if (d?.b64_json) return `data:image/png;base64,${d.b64_json}`;
+  if (d?.url) return d.url;
+  throw new Error("No edited image returned");
+}
+
+/**
  * Speech-to-text (Whisper). Takes a browser-uploaded audio file and returns the
  * transcript text.
  */

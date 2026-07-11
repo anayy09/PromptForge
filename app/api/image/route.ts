@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ImageRequestSchema, type ImageResponse } from "@/lib/schema";
-import { generateImage, isConfigured } from "@/lib/client";
+import { generateImage, editImage, isConfigured } from "@/lib/client";
 import { getImageModels } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { modelId, prompt } = parsed.data;
+  const { modelId, prompt, image: refImage } = parsed.data;
 
   const model = getImageModels().find((m) => m.id === modelId);
   if (!model) {
@@ -33,7 +33,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const image = await generateImage(model.id, prompt);
+    // When a reference image is provided, use the OpenAI-compatible
+    // /v1/images/edits endpoint; otherwise use /v1/images/generations.
+    const image = refImage
+      ? await editImage(model.id, prompt, refImage)
+      : await generateImage(model.id, prompt);
     const body: ImageResponse = { image, model: { id: model.id, name: model.name } };
     return NextResponse.json(body);
   } catch (err) {
