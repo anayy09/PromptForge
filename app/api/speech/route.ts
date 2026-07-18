@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { SpeechRequestSchema } from "@/lib/schema";
-import { synthesizeSpeech, isConfigured } from "@/lib/client";
+import { synthesizeSpeech, isConfigured, isModelAvailable } from "@/lib/client";
 import { getSpeechModel } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   }
 
   const model = getSpeechModel();
-  if (!model) {
+  if (!model || !isModelAvailable(model.id)) {
     return NextResponse.json({ error: "No text-to-speech model available." }, { status: 400 });
   }
 

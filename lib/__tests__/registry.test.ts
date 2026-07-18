@@ -3,7 +3,7 @@ import {
   getAll,
   getById,
   getRewriters,
-  getCheapestRewriter,
+  strongestOf,
   getTargetsForCategory,
   costFor,
   getChatModels,
@@ -41,9 +41,11 @@ describe("registry filters", () => {
     expect(targets.some((m) => m.category === "General LLM")).toBe(true);
   });
 
-  it("cheapest rewriter is the lowest combined price", () => {
-    const cheapest = getCheapestRewriter();
-    expect(cheapest?.id).toBe("gpt-oss-20b");
+  it("strongestOf picks by parameter count, ignoring price", () => {
+    const strongest = strongestOf(getRewriters());
+    // Nemotron 3 Ultra (550B MoE, OpenRouter free tier) tops the registry.
+    expect(strongest?.id).toBe("nvidia/nemotron-3-ultra-550b-a55b:free");
+    expect(strongestOf([])).toBeUndefined();
   });
 
   it("image-gen targets are diffusion models only", () => {
@@ -55,6 +57,40 @@ describe("registry filters", () => {
   it("multimodal targets accept more than one input modality", () => {
     const t = getTargetsForCategory("data-viz-multimodal");
     expect(t.every((m) => m.inputModalities.length > 1)).toBe(true);
+  });
+});
+
+describe("dual-provider registry", () => {
+  it("every model carries a known source", () => {
+    for (const m of getAll()) {
+      expect(["navigator", "openrouter"]).toContain(m.source);
+    }
+    expect(getAll().some((m) => m.source === "openrouter")).toBe(true);
+    expect(getAll().some((m) => m.source === "navigator")).toBe(true);
+  });
+
+  it("openrouter code specialists are chat/targets, never rewriters", () => {
+    const rw = getRewriters();
+    expect(rw.some((m) => m.id === "qwen/qwen3-coder:free")).toBe(false);
+    expect(getTargetsForCategory("coding").some((m) => m.id === "qwen/qwen3-coder:free")).toBe(true);
+    expect(getChatModels().some((m) => m.id === "qwen/qwen3-coder:free")).toBe(true);
+  });
+
+  it("deliberately excluded OpenRouter models never ship", () => {
+    // Safety-stripped, moderation-classifier, and audio-output models are
+    // curated out in scripts/gen-models.mjs; regressions here mean the
+    // exclusion list was bypassed.
+    const ids = new Set(getAll().map((m) => m.id));
+    expect(ids.has("cognitivecomputations/dolphin-mistral-24b-venice-edition:free")).toBe(false);
+    expect(ids.has("nvidia/nemotron-3.5-content-safety:free")).toBe(false);
+    expect(ids.has("google/lyria-3-pro-preview")).toBe(false);
+    expect(ids.has("google/lyria-3-clip-preview")).toBe(false);
+  });
+
+  it("free multimodal models join the vision chat pool", () => {
+    const vision = getChatModels({ visionOnly: true });
+    expect(vision.some((m) => m.id === "google/gemma-4-31b-it:free")).toBe(true);
+    expect(vision.some((m) => m.id === "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free")).toBe(true);
   });
 });
 

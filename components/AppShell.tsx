@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-faint">
               Enhance rewrites your prompts. Chat answers them. Two tools, one workspace.
             </span>
-            <span className="ml-auto tabular-nums text-faint">local-first · cost-transparent</span>
+            <span className="ml-auto tabular-nums text-faint">local-first</span>
           </div>
         </footer>
       </div>

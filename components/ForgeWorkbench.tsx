@@ -14,11 +14,11 @@ import { ModeSelector } from "./ModeSelector";
 import { ForgeButton } from "./ForgeButton";
 import { EnhancedOutput } from "./EnhancedOutput";
 import { useSettings } from "./providers";
+import { useModelAvailability } from "./useModelAvailability";
 import { CATEGORIES } from "@/lib/categories";
-import { costFor, type AppCategory } from "@/lib/registry";
+import { getById, getRewriters, strongestOf, type AppCategory } from "@/lib/registry";
 import { estimateTokens } from "@/lib/tokens";
 import { lintPrompt } from "@/lib/lint";
-import { formatCost } from "@/lib/format";
 import type { ClassifyResponse, EnhanceResponse, ForgeMode, Knobs } from "@/lib/schema";
 import { newId, patchEntry, saveHistory, type HistoryEntry } from "@/lib/storage";
 import { slugTitle } from "@/lib/format";
@@ -87,6 +87,22 @@ export function ForgeWorkbench() {
     setRewriterId(settings.rewriterOverrides[c] ?? CATEGORIES[c].defaultRewriterId);
     setTargetId("");
   };
+
+  // If the seeded rewriter's provider turns out to be unconfigured, move to the
+  // override/default when possible, else the strongest available rewriter. The
+  // server would fall back anyway; this keeps the picker honest.
+  const { sources } = useModelAvailability();
+  useEffect(() => {
+    if (!sources) return;
+    const current = getById(rewriterId);
+    if (current && sources.includes(current.source)) return;
+    const available = getRewriters().filter((m) => sources.includes(m.source));
+    const preferred = [settings.rewriterOverrides[category], CATEGORIES[category].defaultRewriterId];
+    const pick =
+      preferred.find((id) => id && available.some((m) => m.id === id)) ?? strongestOf(available)?.id;
+    if (pick && pick !== rewriterId) setRewriterId(pick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sources, rewriterId, category]);
 
   // Advanced picker + simple dropdown both count as a manual choice: stop auto-detect.
   const onCategory = (c: AppCategory) => {
@@ -204,11 +220,6 @@ export function ForgeWorkbench() {
     update({ advancedMode: next });
   };
 
-  // Rough pre-call cost preview.
-  const estIn = estimateTokens(rawPrompt) + 260;
-  const estOut = Math.min(900, Math.max(120, Math.round(estimateTokens(rawPrompt) * 1.4)));
-  const estCost = formatCost(costFor(rewriterId, estIn, estOut), true);
-
   const cat = CATEGORIES[category];
   const rawLint = useMemo(() => lintPrompt(rawPrompt, category), [rawPrompt, category]);
 
@@ -260,7 +271,7 @@ export function ForgeWorkbench() {
             </>
           )}
 
-          <ForgeButton onClick={forge} loading={loading} disabled={!rawPrompt.trim()} estCost={estCost} />
+          <ForgeButton onClick={forge} loading={loading} disabled={!rawPrompt.trim()} />
 
           <button
             onClick={toggleAdvanced}

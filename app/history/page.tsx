@@ -9,7 +9,7 @@ import {
   type HistoryEntry,
 } from "@/lib/storage";
 import { CATEGORY_META } from "@/components/categoryMeta";
-import { formatCost, relativeTime } from "@/lib/format";
+import { relativeTime } from "@/lib/format";
 import { useLoadIntoForge } from "@/components/useLoadIntoForge";
 import { useCopy } from "@/components/useCopy";
 import { Star, Check } from "lucide-react";
@@ -154,7 +154,6 @@ function HistoryRow({
             <span>{relativeTime(e.ts)}</span>
             <span>· {e.modelName}</span>
             {e.targetName && <span>→ {e.targetName}</span>}
-            <span>· {formatCost(e.cost, e.costApproximate)}</span>
           </div>
         </button>
         <div className="flex shrink-0 flex-col items-end gap-1.5">

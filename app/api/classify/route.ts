@@ -1,25 +1,32 @@
 import { NextResponse } from "next/server";
 import { ClassifyRequestSchema, type ClassifyResponse } from "@/lib/schema";
-import { callClassifier, isConfigured } from "@/lib/client";
+import { availableOf, callClassifier, isConfigured } from "@/lib/client";
 import { CATEGORIES } from "@/lib/categories";
-import { getById, getCheapestRewriter, getRewriters } from "@/lib/registry";
+import { getById, getRewriters } from "@/lib/registry";
 
 export const runtime = "nodejs";
 
-// Auto-route uses a cheap, fast model. Prefer these; fall back to the cheapest
-// available rewriter so the feature works on any registry.
-const CLASSIFIER_PREFERENCE = ["gpt-oss-20b", "nemotron-3-nano-30b-a3b", "mistral-7b-instruct"];
+// Auto-route uses a small, fast model from whichever provider is configured;
+// fall back to any available rewriter so the feature works on any registry.
+const CLASSIFIER_PREFERENCE = [
+  "gpt-oss-20b",
+  "openai/gpt-oss-20b:free",
+  "nemotron-3-nano-30b-a3b",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "mistral-7b-instruct",
+];
 
 function pickClassifier(): string | null {
-  const valid = new Set(getRewriters().map((m) => m.id));
-  for (const id of CLASSIFIER_PREFERENCE) if (valid.has(id)) return id;
-  return getCheapestRewriter()?.id ?? null;
+  const available = availableOf(getRewriters());
+  const ids = new Set(available.map((m) => m.id));
+  for (const id of CLASSIFIER_PREFERENCE) if (ids.has(id)) return id;
+  return available[0]?.id ?? null;
 }
 
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
-      { error: "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY." },
+      { error: "No model endpoint is configured." },
       { status: 503 },
     );
   }

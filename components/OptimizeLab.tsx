@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { AppCategory } from "@/lib/registry";
 import type { OptimizeResponse, OptimizeCandidate } from "@/lib/schema";
-import { formatCost, formatTokens } from "@/lib/format";
+import { formatTokens } from "@/lib/format";
 import { useCopy } from "./useCopy";
 
 const UNSUPPORTED: AppCategory[] = ["image-gen", "data-viz-multimodal"];
@@ -108,8 +108,7 @@ export function OptimizeLab({
                 </span>
                 <span className="ml-auto">
                   {result.usage &&
-                    `${formatTokens(result.usage.promptTokens + result.usage.completionTokens)} tok · `}
-                  {formatCost(result.cost, result.costApproximate)}
+                    `${formatTokens(result.usage.promptTokens + result.usage.completionTokens)} tok`}
                 </span>
               </div>
               {result.reasoning && (

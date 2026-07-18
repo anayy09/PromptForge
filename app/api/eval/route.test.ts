@@ -3,6 +3,10 @@ import { describe, it, expect, vi } from "vitest";
 // Mock the client so no live call is made. callEval returns a fixed verdict.
 vi.mock("@/lib/client", () => ({
   isConfigured: () => true,
+  isModelAvailable: () => true,
+  availableOf: <T,>(list: T) => list,
+  resolveAvailableRewriter: (id: string) => id,
+  configuredSources: () => ['navigator', 'openrouter'],
   callEval: vi.fn(async () => ({
     winner: "enhanced" as const,
     reasoning: "B was more complete",

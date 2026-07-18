@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { TranscribeResponse } from "@/lib/schema";
-import { transcribeAudio, isConfigured } from "@/lib/client";
+import { transcribeAudio, isConfigured, isModelAvailable } from "@/lib/client";
 import { getTranscribeModel } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   }
 
   const model = getTranscribeModel();
-  if (!model) {
+  if (!model || !isModelAvailable(model.id)) {
     return NextResponse.json({ error: "No speech-to-text model available." }, { status: 400 });
   }
 

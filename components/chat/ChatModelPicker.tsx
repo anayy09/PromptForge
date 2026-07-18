@@ -1,6 +1,7 @@
 "use client";
 
-import { getChatModels, getImageModels, priceLabel, getById } from "@/lib/registry";
+import { getChatModels, getImageModels, getById } from "@/lib/registry";
+import { useModelAvailability } from "../useModelAvailability";
 
 // Friendly group headers for the model dropdown, keyed by registry category.
 const GROUP_LABEL: Record<string, string> = {
@@ -25,8 +26,9 @@ export function ChatModelPicker({
   value: string;
   onChange: (id: string) => void;
 }) {
-  const chat = getChatModels();
-  const images = getImageModels();
+  const { filter } = useModelAvailability();
+  const chat = filter(getChatModels());
+  const images = filter(getImageModels());
   const groups = GROUP_ORDER.filter((g) => chat.some((m) => m.category === g));
   const current = getById(value);
   const isImage = current?.category === "Image Generation";
@@ -71,8 +73,7 @@ export function ChatModelPicker({
           {isImage ? "Generates images from a description" : current.bestFor}
           {!isImage && modalityBadges(current.inputModalities)
             ? ` · ${modalityBadges(current.inputModalities)}`
-            : ""}{" "}
-          · <span className="tabular-nums">{priceLabel(current.id)}</span>
+            : ""}
         </p>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type OpenAI from "openai";
 import { ChatRequestSchema } from "@/lib/schema";
-import { streamChat, isConfigured } from "@/lib/client";
+import { streamChat, isConfigured, isModelAvailable } from "@/lib/client";
 import { getChatModels, supportsVision } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -38,7 +38,7 @@ function formatSize(bytes: number): string {
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
-      { error: "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY." },
+      { error: "No model endpoint is configured." },
       { status: 503 },
     );
   }
@@ -64,6 +64,12 @@ export async function POST(req: Request) {
   const model = getChatModels().find((m) => m.id === modelId);
   if (!model) {
     return NextResponse.json({ error: "Unknown or unsupported chat model." }, { status: 400 });
+  }
+  if (!isModelAvailable(model.id)) {
+    return NextResponse.json(
+      { error: `${model.name} is not available right now.` },
+      { status: 503 },
+    );
   }
 
   // Vision: when the model accepts image input, fold a user turn's attachments

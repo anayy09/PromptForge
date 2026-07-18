@@ -5,7 +5,7 @@ import { Copy, Check, Star, RefreshCw, Wand2, AlertTriangle } from "lucide-react
 import type { EnhanceResponse, ForgeMethod } from "@/lib/schema";
 import { diffWords, diffStats } from "@/lib/diff";
 import { lintPrompt } from "@/lib/lint";
-import { formatCost, formatTokens } from "@/lib/format";
+import { formatTokens } from "@/lib/format";
 import { PromptScore } from "./PromptScore";
 import { useCopy } from "./useCopy";
 
@@ -106,9 +106,6 @@ export function EnhancedOutput({
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-3">
           <Wand2 size={15} className="text-ember" aria-hidden />
           <span className="text-sm font-semibold text-ink">Improved prompt</span>
-          <span className="ml-auto text-2xs tabular-nums text-faint" title="estimated cost">
-            {formatCost(result.cost, result.costApproximate)}
-          </span>
         </div>
 
         <div className="flex-1 overflow-auto p-4">
@@ -198,12 +195,6 @@ export function EnhancedOutput({
               {formatTokens(result.usage.promptTokens)}→{formatTokens(result.usage.completionTokens)} tok
             </span>
           )}
-          <span
-            className={result.costApproximate ? "text-faint" : "text-ink-soft"}
-            title={result.costApproximate ? "estimated (no usage returned)" : "actual cost"}
-          >
-            {formatCost(result.cost, result.costApproximate)}
-          </span>
         </span>
       </div>
 

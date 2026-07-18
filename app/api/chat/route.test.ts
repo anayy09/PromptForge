@@ -3,6 +3,10 @@ import { describe, it, expect, vi } from "vitest";
 // Mock the client so no live call is made. streamChat yields two text chunks.
 vi.mock("@/lib/client", () => ({
   isConfigured: () => true,
+  isModelAvailable: () => true,
+  availableOf: <T,>(list: T) => list,
+  resolveAvailableRewriter: (id: string) => id,
+  configuredSources: () => ['navigator', 'openrouter'],
   // eslint-disable-next-line require-yield
   streamChat: vi.fn(async function* () {
     yield "Hello";

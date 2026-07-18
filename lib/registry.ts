@@ -4,7 +4,28 @@ import models from "@/data/models.json";
  * The model registry is the single source of truth.
  * Never hardcode model IDs, paths, or costs in components; read them from here.
  */
-export type RegistryModel = (typeof models)[number];
+export type ModelSource = "navigator" | "openrouter";
+
+export interface RegistryModel {
+  id: string;
+  uuid?: string;
+  name: string;
+  costInput: number | null;
+  costOutput: number | null;
+  category: string;
+  architecture: string;
+  size: string;
+  inputModalities: string[];
+  outputModalities: string[];
+  contextWindow: string;
+  primaryUseCases: string;
+  bestFor: string;
+  /** Which configured endpoint serves this model. */
+  source: ModelSource;
+}
+
+// Single typed view of the JSON; `source` narrows from string to ModelSource.
+const MODELS = models as unknown as RegistryModel[];
 
 export type AppCategory =
   | "coding"
@@ -23,16 +44,16 @@ export type AppCategory =
 const TEXT_OUTPUT_CATEGORIES = new Set(["General LLM", "Medical LLM"]);
 
 export function getAll(): RegistryModel[] {
-  return models as RegistryModel[];
+  return MODELS;
 }
 
 export function getById(id: string): RegistryModel | undefined {
-  return (models as RegistryModel[]).find((m) => m.id === id);
+  return MODELS.find((m) => m.id === id);
 }
 
 /** Rewriters must emit text. Enforced here so no caller can bypass it. */
 export function getRewriters(): RegistryModel[] {
-  return (models as RegistryModel[]).filter(
+  return MODELS.filter(
     (m) => TEXT_OUTPUT_CATEGORIES.has(m.category) && m.outputModalities.includes("Text"),
   );
 }
@@ -47,7 +68,7 @@ const CHAT_CATEGORIES = new Set(["General LLM", "Medical LLM", "Code"]);
  * to models that also accept image input (used by Phase 3's vision mode).
  */
 export function getChatModels(opts?: { visionOnly?: boolean }): RegistryModel[] {
-  return (models as RegistryModel[]).filter((m) => {
+  return MODELS.filter((m) => {
     if (!CHAT_CATEGORIES.has(m.category)) return false;
     if (!m.outputModalities.includes("Text")) return false;
     if (opts?.visionOnly && !m.inputModalities.includes("Image")) return false;
@@ -57,17 +78,17 @@ export function getChatModels(opts?: { visionOnly?: boolean }): RegistryModel[] 
 
 /** Text-to-image models (FLUX) for the Chat product's image-generation mode. */
 export function getImageModels(): RegistryModel[] {
-  return (models as RegistryModel[]).filter((m) => m.category === "Image Generation");
+  return MODELS.filter((m) => m.category === "Image Generation");
 }
 
 /** First available text-to-speech model, or undefined if the registry has none. */
 export function getSpeechModel(): RegistryModel | undefined {
-  return (models as RegistryModel[]).find((m) => m.category.startsWith("TTS"));
+  return MODELS.find((m) => m.category.startsWith("TTS"));
 }
 
 /** First available speech-to-text model, or undefined if the registry has none. */
 export function getTranscribeModel(): RegistryModel | undefined {
-  return (models as RegistryModel[]).find((m) => m.category.startsWith("ASR"));
+  return MODELS.find((m) => m.category.startsWith("ASR"));
 }
 
 /** Whether a model accepts image input (used to gate vision attachments). */
@@ -81,16 +102,24 @@ export function isImageModel(id: string): boolean {
   return getById(id)?.category === "Image Generation";
 }
 
-/** Cheapest text rewriter, used as a fallback when a default is missing. */
-export function getCheapestRewriter(): RegistryModel | undefined {
-  return getRewriters()
-    .filter((m) => m.costInput != null)
-    .sort((a, b) => (a.costInput! + (a.costOutput ?? 0)) - (b.costInput! + (b.costOutput ?? 0)))[0];
+/** "550B total / 55B active" -> 550; a rough capability proxy. */
+function paramSize(m: RegistryModel): number {
+  const match = /([\d.]+)\s*B/i.exec(m.size);
+  return match ? Number(match[1]) : 0;
+}
+
+/**
+ * Strongest model of a list by parameter count. Cost is deliberately ignored:
+ * both configured endpoints are free for this deployment, so fallbacks always
+ * prefer capability.
+ */
+export function strongestOf(list: RegistryModel[]): RegistryModel | undefined {
+  return [...list].sort((a, b) => paramSize(b) - paramSize(a))[0];
 }
 
 /** Valid *target* models per app category. */
 export function getTargetsForCategory(cat: AppCategory): RegistryModel[] {
-  const all = models as RegistryModel[];
+  const all = MODELS;
   switch (cat) {
     case "coding":
       // Code prompts can target code specialists (Codestral) or general LLMs.
@@ -118,10 +147,3 @@ export function costFor(id: string, inTok: number, outTok: number): number | nul
   return (inTok / 1e6) * m.costInput + (outTok / 1e6) * out;
 }
 
-/** Human-readable price label, e.g. "$0.06 / $0.24 per MTok". */
-export function priceLabel(id: string): string {
-  const m = getById(id);
-  if (!m || m.costInput == null) return "usage-priced";
-  const out = m.costOutput == null ? "-" : `$${m.costOutput.toFixed(2)}`;
-  return `$${m.costInput.toFixed(2)} / ${out} per MTok`;
-}

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { OptimizeRequestSchema, type OptimizeResponse } from "@/lib/schema";
 import { buildMetaPrompt } from "@/lib/meta-prompt";
-import { callOptimize, isConfigured } from "@/lib/client";
+import {
+  availableOf,
+  callOptimize,
+  isConfigured,
+  isModelAvailable,
+  resolveAvailableRewriter,
+} from "@/lib/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getAll, getById, getRewriters } from "@/lib/registry";
 
@@ -10,22 +16,37 @@ export const runtime = "nodejs";
 // parallelized, but this is the most call-heavy route; keep N small.
 export const maxDuration = 60;
 
-const TARGET_PREFERENCE = ["llama-3.3-70b-instruct", "gpt-oss-120b", "mistral-small-3.1"];
-const JUDGE_PREFERENCE = ["gpt-oss-120b", "nemotron-3-super-120b-a12b", "llama-3.3-70b-instruct"];
+const TARGET_PREFERENCE = [
+  "llama-3.3-70b-instruct",
+  "gpt-oss-120b",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "openai/gpt-oss-20b:free",
+  "mistral-small-3.1",
+];
+const JUDGE_PREFERENCE = [
+  "gpt-oss-120b",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "nemotron-3-super-120b-a12b",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "llama-3.3-70b-instruct",
+  "meta-llama/llama-3.3-70b-instruct:free",
+];
 
 const isTextModel = (id: string): boolean =>
   !!getById(id)?.outputModalities.includes("Text");
 
 function firstTextModel(pref: string[], exclude?: string): string | null {
-  for (const id of pref) if (id !== exclude && isTextModel(id)) return id;
-  const any = getAll().find((m) => m.id !== exclude && m.outputModalities.includes("Text"));
+  for (const id of pref) if (id !== exclude && isTextModel(id) && isModelAvailable(id)) return id;
+  const any = availableOf(getAll()).find(
+    (m) => m.id !== exclude && m.outputModalities.includes("Text"),
+  );
   return any?.id ?? null;
 }
 
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
-      { error: "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY." },
+      { error: "No model endpoint is configured." },
       { status: 503 },
     );
   }
@@ -46,10 +67,18 @@ export async function POST(req: Request) {
   }
   const { rawPrompt, category, knobs, targetId, candidates } = parsed.data;
 
-  // Resolve rewriter (must be a valid text rewriter; no codestral etc.).
-  const rewriterId = parsed.data.rewriterId ?? CATEGORIES[category].defaultRewriterId;
-  if (!getRewriters().some((m) => m.id === rewriterId)) {
-    return NextResponse.json({ error: `${rewriterId} is not a valid rewriter.` }, { status: 400 });
+  // Resolve rewriter (must be a valid text rewriter; no codestral etc.). The
+  // category default falls back to the strongest available rewriter.
+  const rewriterId =
+    parsed.data.rewriterId ?? resolveAvailableRewriter(CATEGORIES[category].defaultRewriterId);
+  if (!rewriterId || !getRewriters().some((m) => m.id === rewriterId)) {
+    return NextResponse.json({ error: "No valid rewriter is available." }, { status: 400 });
+  }
+  if (!isModelAvailable(rewriterId)) {
+    return NextResponse.json(
+      { error: "That rewriter model is not available right now." },
+      { status: 503 },
+    );
   }
 
   // Resolve a text target (image/multimodal targets cannot be run-and-judged).
@@ -59,6 +88,12 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Optimization can only run against text-output target models." },
         { status: 400 },
+      );
+    }
+    if (!isModelAvailable(targetId)) {
+      return NextResponse.json(
+        { error: "That target model is not available right now." },
+        { status: 503 },
       );
     }
     resolvedTarget = targetId;

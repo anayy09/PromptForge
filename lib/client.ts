@@ -11,16 +11,19 @@ import {
   type EvalJudgeOutput,
 } from "./schema";
 import { stricterReminder } from "./meta-prompt";
-import { costFor, getById } from "./registry";
+import {
+  costFor,
+  getById,
+  getRewriters,
+  strongestOf,
+  type ModelSource,
+  type RegistryModel,
+} from "./registry";
 
 /**
  * Server-only: the `server-only` import makes a client bundle that touches this
  * file fail to build, so the API key can never leak.
  */
-
-// Accept both the documented MODEL_API_* names and the shorthand in .env.
-const API_KEY = process.env.MODEL_API_KEY ?? process.env.API_KEY ?? "";
-const RAW_BASE = process.env.MODEL_API_BASE_URL ?? process.env.BASE_URL ?? "";
 
 // Normalize to an OpenAI-style base that ends in /v1 (the shorthand BASE_URL in
 // .env is the bare host). If a caller already points at /v1 we leave it.
@@ -30,18 +33,97 @@ function normalizeBase(raw: string): string {
   return /\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/v1`;
 }
 
-export const BASE_URL = normalizeBase(RAW_BASE);
+// Two OpenAI-compatible providers, keyed by the registry's `source` field.
+// Navigator keeps the documented MODEL_API_* names (plus the API_KEY/BASE_URL
+// shorthand); OpenRouter uses OPENROUTER_*. If MODEL_API_BASE_URL itself points
+// at openrouter.ai (an easy mistake when adding the second endpoint), those
+// credentials are silently treated as the OpenRouter provider so model routing
+// stays correct either way.
+const RAW_NAV_BASE = process.env.MODEL_API_BASE_URL ?? process.env.BASE_URL ?? "";
+const NAV_KEY = process.env.MODEL_API_KEY ?? process.env.API_KEY ?? "";
 
-export function isConfigured(): boolean {
-  return Boolean(API_KEY && BASE_URL);
+function isOpenRouterHost(base: string): boolean {
+  try {
+    return /(^|\.)openrouter\.ai$/i.test(new URL(normalizeBase(base)).hostname);
+  } catch {
+    return false;
+  }
+}
+const navBaseIsOpenRouter = isOpenRouterHost(RAW_NAV_BASE);
+
+const PROVIDERS: Record<ModelSource, { baseURL: string; apiKey: string }> = {
+  navigator: navBaseIsOpenRouter
+    ? { baseURL: "", apiKey: "" }
+    : { baseURL: normalizeBase(RAW_NAV_BASE), apiKey: NAV_KEY },
+  openrouter: {
+    baseURL: normalizeBase(
+      process.env.OPENROUTER_API_BASE_URL ??
+        (navBaseIsOpenRouter ? RAW_NAV_BASE : "https://openrouter.ai/api"),
+    ),
+    apiKey: process.env.OPENROUTER_API_KEY ?? (navBaseIsOpenRouter ? NAV_KEY : ""),
+  },
+};
+
+/** Providers with both a base URL and a key; models on others are unusable. */
+export function configuredSources(): ModelSource[] {
+  return (Object.keys(PROVIDERS) as ModelSource[]).filter(
+    (s) => PROVIDERS[s].baseURL && PROVIDERS[s].apiKey,
+  );
 }
 
-let _client: OpenAI | null = null;
-function client(): OpenAI {
-  if (!_client) {
-    _client = new OpenAI({ apiKey: API_KEY, baseURL: BASE_URL });
+export function isConfigured(): boolean {
+  return configuredSources().length > 0;
+}
+
+/** Whether the model exists in the registry AND its provider is configured. */
+export function isModelAvailable(id: string): boolean {
+  const m = getById(id);
+  return !!m && Boolean(PROVIDERS[m.source].baseURL && PROVIDERS[m.source].apiKey);
+}
+
+/** Registry list narrowed to models whose provider is configured. */
+export function availableOf(list: RegistryModel[]): RegistryModel[] {
+  const sources = new Set(configuredSources());
+  return list.filter((m) => sources.has(m.source));
+}
+
+/**
+ * Resolve a rewriter id against what is actually callable. When the preferred
+ * (category-default or user-picked default) model's provider is not configured,
+ * fall back to the strongest available text rewriter and warn server-side only.
+ */
+export function resolveAvailableRewriter(preferredId: string): string | null {
+  if (isModelAvailable(preferredId) && getRewriters().some((m) => m.id === preferredId)) {
+    return preferredId;
   }
-  return _client;
+  const fallback = strongestOf(availableOf(getRewriters()));
+  if (fallback) {
+    console.warn(
+      `[registry] rewriter "${preferredId}" is not available; falling back to "${fallback.id}"`,
+    );
+    return fallback.id;
+  }
+  return null;
+}
+
+const clients: Partial<Record<ModelSource, OpenAI>> = {};
+function clientFor(source: ModelSource): OpenAI {
+  const cfg = PROVIDERS[source];
+  if (!cfg.baseURL || !cfg.apiKey) {
+    // Callers validate availability first; this guards direct misuse.
+    throw new Error(`Model provider "${source}" is not configured`);
+  }
+  return (clients[source] ??= new OpenAI({
+    apiKey: cfg.apiKey,
+    baseURL: cfg.baseURL,
+    // OpenRouter uses these optional headers for app attribution only.
+    defaultHeaders: source === "openrouter" ? { "X-Title": "PromptForge" } : undefined,
+  }));
+}
+
+/** Pick the right provider client for a registry model id. */
+function client(modelId: string): OpenAI {
+  return clientFor(getById(modelId)?.source ?? "navigator");
 }
 
 export interface RewriteResult {
@@ -89,7 +171,7 @@ export async function callRewriter(
   let usage: RewriteResult["usage"] = null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await client().chat.completions.create({
+    const res = await client(modelName).chat.completions.create({
       model: modelName, // endpoint keys by registry `id` (e.g. gpt-oss-120b), NOT `path`
       messages,
       temperature: attempt === 0 ? 0.4 : 0.2,
@@ -128,7 +210,7 @@ export async function callVariants(
   primary: string,
 ): Promise<string[]> {
   try {
-    const res = await client().chat.completions.create({
+    const res = await client(modelName).chat.completions.create({
       model: modelName,
       messages: [
         { role: "system", content: system },
@@ -163,7 +245,7 @@ export async function* streamChat(
   modelName: string,
   messages: OpenAI.Chat.ChatCompletionMessageParam[],
 ): AsyncGenerator<string> {
-  const stream = await client().chat.completions.create({
+  const stream = await client(modelName).chat.completions.create({
     model: modelName,
     messages,
     temperature: 0.7,
@@ -182,7 +264,7 @@ export async function* streamChat(
  * ignores response_format. Throws on an empty result so the route can degrade.
  */
 export async function generateImage(modelName: string, prompt: string): Promise<string> {
-  const res = await client().images.generate({
+  const res = await client(modelName).images.generate({
     model: modelName,
     prompt,
     n: 1,
@@ -210,7 +292,7 @@ export async function editImage(
   const binary = Buffer.from(b64, "base64");
   const file = new File([binary], "input.png", { type: mime });
 
-  const res = await client().images.edit({
+  const res = await client(modelName).images.edit({
     model: modelName,
     image: file,
     prompt,
@@ -228,7 +310,7 @@ export async function editImage(
  * transcript text.
  */
 export async function transcribeAudio(modelName: string, file: File): Promise<string> {
-  const res = await client().audio.transcriptions.create({ model: modelName, file });
+  const res = await client(modelName).audio.transcriptions.create({ model: modelName, file });
   return (res as { text?: string }).text ?? "";
 }
 
@@ -241,7 +323,7 @@ export async function synthesizeSpeech(
   text: string,
   voice: string,
 ): Promise<ArrayBuffer> {
-  const res = await client().audio.speech.create({
+  const res = await client(modelName).audio.speech.create({
     model: modelName,
     voice,
     input: text,
@@ -279,7 +361,7 @@ export async function callClassifier(
   let lastErr: unknown = null;
   let usage: Usage | null = null;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await client().chat.completions.create({
+    const res = await client(modelName).chat.completions.create({
       model: modelName,
       messages,
       temperature: 0,
@@ -313,7 +395,7 @@ async function runTarget(
   modelName: string,
   prompt: string,
 ): Promise<{ text: string; usage: Usage | null }> {
-  const res = await client().chat.completions.create({
+  const res = await client(modelName).chat.completions.create({
     model: modelName,
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
@@ -366,7 +448,7 @@ export async function callEval(
 
   const judgeUser = `User goal:\n"""\n${rawPrompt}\n"""\n\nResponse A:\n"""\n${rawRun.text}\n"""\n\nResponse B:\n"""\n${enhancedRun.text}\n"""`;
 
-  const res = await client().chat.completions.create({
+  const res = await client(judgeId).chat.completions.create({
     model: judgeId,
     messages: [
       { role: "system", content: judgeSystem },
@@ -472,7 +554,7 @@ export async function callOptimize(
 { "scores": [${prompts.map(() => "0-10").join(", ")}], "bestIndex": 0-based index of the best, "reasoning": "one sentence" }`;
   const judgeUser = `User goal:\n"""\n${rawPrompt}\n"""\n\n${roster}`;
 
-  const res = await client().chat.completions.create({
+  const res = await client(judgeId).chat.completions.create({
     model: judgeId,
     messages: [
       { role: "system", content: judgeSystem },
@@ -545,7 +627,7 @@ export async function callReflexion(
   const trace: { critique: string }[] = [];
 
   for (let i = 0; i < rounds; i++) {
-    const res = await client().chat.completions.create({
+    const res = await client(modelName).chat.completions.create({
       model: modelName,
       messages: [
         { role: "system", content: system },
@@ -644,7 +726,7 @@ ${roster}
 Return ONLY a JSON object:
 { "enhancedPrompt": "the synthesized best rewrite", "changes": [{ "what": "", "why": "" }], "assumptions": [], "rationale": "one sentence on how you combined them" }`;
 
-  const res = await client().chat.completions.create({
+  const res = await client(judgeId).chat.completions.create({
     model: judgeId,
     messages: [
       { role: "system", content: system },
