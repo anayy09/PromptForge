@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { EvalRequestSchema, type EvalResponse } from "@/lib/schema";
-import { callEval, isConfigured } from "@/lib/client";
+import { availableOf, callEval, isConfigured, isModelAvailable } from "@/lib/client";
 import { getAll, getById } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -8,22 +8,37 @@ export const runtime = "nodejs";
 // time limit; the two target runs execute in parallel to stay within it.
 export const maxDuration = 60;
 
-const TARGET_PREFERENCE = ["llama-3.3-70b-instruct", "gpt-oss-120b", "mistral-small-3.1"];
-const JUDGE_PREFERENCE = ["gpt-oss-120b", "nemotron-3-super-120b-a12b", "llama-3.3-70b-instruct"];
+const TARGET_PREFERENCE = [
+  "llama-3.3-70b-instruct",
+  "gpt-oss-120b",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "openai/gpt-oss-20b:free",
+  "mistral-small-3.1",
+];
+const JUDGE_PREFERENCE = [
+  "gpt-oss-120b",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "nemotron-3-super-120b-a12b",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "llama-3.3-70b-instruct",
+  "meta-llama/llama-3.3-70b-instruct:free",
+];
 
 const isTextModel = (id: string): boolean =>
   !!getById(id)?.outputModalities.includes("Text");
 
 function firstTextModel(pref: string[], exclude?: string): string | null {
-  for (const id of pref) if (id !== exclude && isTextModel(id)) return id;
-  const any = getAll().find((m) => m.id !== exclude && m.outputModalities.includes("Text"));
+  for (const id of pref) if (id !== exclude && isTextModel(id) && isModelAvailable(id)) return id;
+  const any = availableOf(getAll()).find(
+    (m) => m.id !== exclude && m.outputModalities.includes("Text"),
+  );
   return any?.id ?? null;
 }
 
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
-      { error: "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY." },
+      { error: "No model endpoint is configured." },
       { status: 503 },
     );
   }
@@ -52,6 +67,12 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "The Proving Ground can only run text-output target models." },
         { status: 400 },
+      );
+    }
+    if (!isModelAvailable(targetId)) {
+      return NextResponse.json(
+        { error: "That target model is not available right now." },
+        { status: 503 },
       );
     }
     resolvedTarget = targetId;

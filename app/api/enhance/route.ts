@@ -1,22 +1,38 @@
 import { NextResponse } from "next/server";
 import { EnhanceRequestSchema, type EnhanceResponse, type ForgeMethod } from "@/lib/schema";
 import { buildMetaPrompt } from "@/lib/meta-prompt";
-import { callRewriter, callVariants, callReflexion, callEnsemble, isConfigured } from "@/lib/client";
+import {
+  callRewriter,
+  callVariants,
+  callReflexion,
+  callEnsemble,
+  isConfigured,
+  isModelAvailable,
+  availableOf,
+  resolveAvailableRewriter,
+} from "@/lib/client";
 import { CATEGORIES } from "@/lib/categories";
 import { getById, getRewriters, costFor } from "@/lib/registry";
 import { estimatePromptTokens, estimateTokens } from "@/lib/tokens";
 
 export const runtime = "nodejs";
 
-// Preferred fillers for an auto-picked ensemble roster: strong, cheap, diverse
-// text rewriters. Only valid rewriters actually present in the registry are used.
+// Preferred fillers for an auto-picked ensemble roster: strong, diverse text
+// rewriters across both providers. Only rewriters whose provider is configured
+// are actually used.
 const ENSEMBLE_POOL = [
   "gpt-oss-120b",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
   "nemotron-3-super-120b-a12b",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
   "gemma-4-31b-it",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
   "mistral-small-3.1",
   "llama-3.3-70b-instruct",
 ];
+
+// Ensemble judge preference: a strong reasoning model from either provider.
+const JUDGE_POOL = ["gpt-oss-120b", "nvidia/nemotron-3-ultra-550b-a55b:free"];
 
 /** Build a 3-model ensemble roster seeded with the chosen rewriter. */
 function defaultEnsemble(primaryId: string, validIds: Set<string>): string[] {
@@ -31,7 +47,7 @@ function defaultEnsemble(primaryId: string, validIds: Set<string>): string[] {
 export async function POST(req: Request) {
   if (!isConfigured()) {
     return NextResponse.json(
-      { error: "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY." },
+      { error: "No model endpoint is configured." },
       { status: 503 },
     );
   }
@@ -54,8 +70,12 @@ export async function POST(req: Request) {
     parsed.data;
   const mode = parsed.data.mode ?? "single";
 
-  // Resolve rewriter: explicit override, else category default, else fail clearly.
-  const modelId = rewriterId ?? CATEGORIES[category].defaultRewriterId;
+  // Resolve rewriter: explicit override, else category default. A default whose
+  // provider is not configured falls back to the strongest available rewriter.
+  const modelId = rewriterId ?? resolveAvailableRewriter(CATEGORIES[category].defaultRewriterId);
+  if (!modelId) {
+    return NextResponse.json({ error: "No rewriter model is available." }, { status: 503 });
+  }
   const model = getById(modelId);
   if (!model) {
     return NextResponse.json({ error: `Unknown model: ${modelId}` }, { status: 400 });
@@ -69,6 +89,13 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+  // An explicitly picked rewriter must be on a configured provider.
+  if (!isModelAvailable(modelId)) {
+    return NextResponse.json(
+      { error: `${model.name} is not available right now.` },
+      { status: 503 },
+    );
+  }
 
   const target = targetId ? getById(targetId) : undefined;
   const { system, user } = buildMetaPrompt(category, rawPrompt, knobs ?? {}, target?.name);
@@ -80,11 +107,14 @@ export async function POST(req: Request) {
     let method: ForgeMethod | undefined;
 
     if (mode === "ensemble") {
-      // Roster: explicit (validated) or an auto-picked default seeded with modelId.
-      const requested = (ensembleIds ?? []).filter((id) => validRewriterIds.has(id));
-      const roster = requested.length >= 2 ? requested.slice(0, 5) : defaultEnsemble(modelId, validRewriterIds);
-      // Judge: a strong general rewriter; prefer gpt-oss-120b, else the primary.
-      const judgeId = validRewriterIds.has("gpt-oss-120b") ? "gpt-oss-120b" : modelId;
+      // Roster: explicit (validated) or an auto-picked default seeded with
+      // modelId. Only rewriters on configured providers can join.
+      const availableRewriterIds = new Set(availableOf(getRewriters()).map((m) => m.id));
+      const requested = (ensembleIds ?? []).filter((id) => availableRewriterIds.has(id));
+      const roster =
+        requested.length >= 2 ? requested.slice(0, 5) : defaultEnsemble(modelId, availableRewriterIds);
+      // Judge: a strong general rewriter from either provider, else the primary.
+      const judgeId = JUDGE_POOL.find((id) => availableRewriterIds.has(id)) ?? modelId;
       const r = await callEnsemble(roster, system, user, judgeId);
       output = r.output;
       usage = r.usage;

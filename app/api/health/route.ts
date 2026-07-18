@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { isConfigured } from "@/lib/client";
+import { configuredSources, isConfigured } from "@/lib/client";
 
 export const runtime = "nodejs";
 
-// Lightweight configuration check for the UI's connectivity indicator.
-// Deliberately returns only a boolean: the backend host, base URL, and key are
-// never exposed to the client (the endpoint identity stays server-side).
+// Lightweight configuration check for the UI's connectivity indicator and
+// model pickers. Reports only registry source names (already public in the
+// bundled registry data); the backend host, base URL, and key stay server-side.
 export async function GET() {
-  return NextResponse.json({ configured: isConfigured() });
+  return NextResponse.json({ configured: isConfigured(), sources: configuredSources() });
 }

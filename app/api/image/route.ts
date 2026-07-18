@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ImageRequestSchema, type ImageResponse } from "@/lib/schema";
-import { generateImage, editImage, isConfigured } from "@/lib/client";
+import { generateImage, editImage, isConfigured, isModelAvailable } from "@/lib/client";
 import { getImageModels } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -30,6 +30,12 @@ export async function POST(req: Request) {
   const model = getImageModels().find((m) => m.id === modelId);
   if (!model) {
     return NextResponse.json({ error: "Unknown or unsupported image model." }, { status: 400 });
+  }
+  if (!isModelAvailable(model.id)) {
+    return NextResponse.json(
+      { error: "Image generation is not available right now." },
+      { status: 503 },
+    );
   }
 
   try {
