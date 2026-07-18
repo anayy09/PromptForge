@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type OpenAI from "openai";
 import { ChatRequestSchema } from "@/lib/schema";
-import { streamChat, isConfigured, isModelAvailable } from "@/lib/client";
+import { startChatStream, isConfigured, isModelAvailable } from "@/lib/client";
 import { getChatModels, supportsVision } from "@/lib/registry";
 
 export const runtime = "nodejs";
@@ -97,16 +97,36 @@ export async function POST(req: Request) {
     }),
   ];
 
+  // Open the upstream stream before committing to a 200, so a model that is
+  // down or rate-limited becomes an honest error the UI can show, not a fake
+  // assistant message. Free-pool saturation (429) gets a specific hint.
+  let deltas: AsyncGenerator<string>;
+  try {
+    deltas = await startChatStream(model.id, chatMessages);
+  } catch (err) {
+    // Do not leak the key or raw endpoint errors (hard rule #4).
+    console.error("[chat] failed to start stream:", err);
+    const busy = (err as { status?: number }).status === 429;
+    return NextResponse.json(
+      {
+        error: busy
+          ? `${model.name} is at capacity right now. Try again in a minute or switch models.`
+          : "The chat request failed. Please try again.",
+      },
+      { status: busy ? 503 : 502 },
+    );
+  }
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const delta of streamChat(model.id, chatMessages)) {
+        for await (const delta of deltas) {
           controller.enqueue(encoder.encode(delta));
         }
       } catch (err) {
-        // Do not leak the key or raw endpoint errors (hard rule #4). Mid-stream
-        // we can only append a short notice; the client shows whatever arrived.
+        // Mid-stream we can only append a short notice; the client shows
+        // whatever arrived.
         console.error("[chat] stream failed:", err);
         controller.enqueue(encoder.encode("\n\n_(The response was interrupted. Please try again.)_"));
       } finally {

@@ -236,26 +236,52 @@ export async function callVariants(
 }
 
 /**
- * Chat (the answering surface). Streams assistant text token-by-token. This is
- * deliberately a plain pass-through to the model with a light system message: it
- * ANSWERS the user, unlike the rewriter path. Kept here only to reuse the one
- * configured, server-only client so the key never leaves the server.
+ * Chat (the answering surface). Deliberately a plain pass-through to the model
+ * with a light system message: it ANSWERS the user, unlike the rewriter path.
+ * Creating the upstream stream is awaited separately from iterating it so the
+ * route can return a real error status when the model is unavailable (e.g. a
+ * saturated OpenRouter free pool returning 429) instead of a 200 response that
+ * dies mid-stream. One short retry smooths transient rate limits.
  */
-export async function* streamChat(
+export async function startChatStream(
   modelName: string,
   messages: OpenAI.Chat.ChatCompletionMessageParam[],
-): AsyncGenerator<string> {
-  const stream = await client(modelName).chat.completions.create({
-    model: modelName,
-    messages,
-    temperature: 0.7,
-    max_tokens: 2048,
-    stream: true,
-  });
-  for await (const chunk of stream) {
-    const delta = chunk.choices[0]?.delta?.content;
-    if (delta) yield delta;
+): Promise<AsyncGenerator<string>> {
+  const create = () =>
+    client(modelName).chat.completions.create(
+      {
+        model: modelName,
+        messages,
+        temperature: 0.7,
+        max_tokens: 2048,
+        stream: true as const,
+      },
+      // Cap the time to first byte; a saturated pool can otherwise hang for
+      // minutes while the router probes providers.
+      { timeout: 60_000, maxRetries: 0 },
+    );
+
+  let stream: Awaited<ReturnType<typeof create>>;
+  const t0 = Date.now();
+  try {
+    stream = await create();
+  } catch (err) {
+    // Retry only fast 429s (an account-level blip). A 429 that itself took
+    // many seconds means the free pool is saturated; retrying just doubles
+    // the user's wait for the same answer.
+    const quickRateLimit = (err as { status?: number }).status === 429 && Date.now() - t0 < 5_000;
+    if (!quickRateLimit) throw err;
+    await new Promise((r) => setTimeout(r, 1500));
+    stream = await create(); // still limited -> throws to the caller
   }
+
+  async function* iterate(): AsyncGenerator<string> {
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) yield delta;
+    }
+  }
+  return iterate();
 }
 
 /**
