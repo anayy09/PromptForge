@@ -7,11 +7,12 @@ vi.mock("@/lib/client", () => ({
   availableOf: <T,>(list: T) => list,
   resolveAvailableRewriter: (id: string) => id,
   configuredSources: () => ['navigator', 'openrouter'],
-  // eslint-disable-next-line require-yield
-  streamChat: vi.fn(async function* () {
-    yield "Hello";
-    yield ", world";
-  }),
+  startChatStream: vi.fn(async () =>
+    (async function* () {
+      yield "Hello";
+      yield ", world";
+    })(),
+  ),
 }));
 
 import { POST } from "@/app/api/chat/route";
