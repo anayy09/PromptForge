@@ -6,14 +6,12 @@ export function ForgeButton({
   onClick,
   loading,
   disabled,
-  estCost,
   label = "Improve my prompt",
   loadingLabel = "Improving…",
 }: {
   onClick: () => void;
   loading: boolean;
   disabled: boolean;
-  estCost: string;
   label?: string;
   loadingLabel?: string;
 }) {
@@ -36,11 +34,6 @@ export function ForgeButton({
         <>
           <Wand2 size={16} strokeWidth={2.2} aria-hidden />
           <span>{label}</span>
-          {!disabled && (
-            <span className="ml-1 text-2xs font-normal tabular-nums text-on-ember/75">
-              ≈ {estCost}
-            </span>
-          )}
         </>
       )}
     </button>

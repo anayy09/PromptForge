@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useSettings } from "@/components/providers";
 import { Field, Select, Segmented, Toggle } from "@/components/controls";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/categories";
-import { getRewriters, getAll, priceLabel, type AppCategory } from "@/lib/registry";
+import { getRewriters, getAll, getById, type AppCategory } from "@/lib/registry";
+import { useModelAvailability } from "@/components/useModelAvailability";
 
 export default function SettingsPage() {
   const { settings, update, hydrated } = useSettings();
-  const rewriters = getRewriters();
+  const { filter } = useModelAvailability();
+  const rewriters = filter(getRewriters());
 
   if (!hydrated) {
     return <div className="p-8 text-center text-xs text-muted">Loading settings…</div>;
@@ -149,7 +151,7 @@ export default function SettingsPage() {
                     </option>
                   ))}
                 </Select>
-                <span className="text-2xs tabular-nums text-faint">{priceLabel(current)}</span>
+                <span className="text-2xs text-faint">{getById(current)?.bestFor ?? ""}</span>
               </Field>
             );
           })}
@@ -184,12 +186,12 @@ function Section({
 }
 
 function EndpointStatus() {
-  const [state, setState] = useState<{ configured: boolean; host: string | null } | null>(null);
+  const [state, setState] = useState<{ configured: boolean; sources?: string[] } | null>(null);
   useEffect(() => {
     fetch("/api/health")
       .then((r) => r.json())
       .then(setState)
-      .catch(() => setState({ configured: false, host: null }));
+      .catch(() => setState({ configured: false }));
   }, []);
 
   const ok = state?.configured;
@@ -200,8 +202,8 @@ function EndpointStatus() {
         {state === null
           ? "Checking endpoint…"
           : ok
-            ? `Endpoint connected`
-            : "Endpoint not configured. Set MODEL_API_BASE_URL and MODEL_API_KEY (or API_KEY / BASE_URL)."}
+            ? `Connected (${(state.sources ?? []).join(", ") || "endpoint"})`
+            : "No endpoint configured. Set MODEL_API_* or OPENROUTER_* environment variables on the server."}
       </span>
     </section>
   );
@@ -217,7 +219,6 @@ function RegistryTable() {
             <tr className="border-b border-hairline text-left text-2xs uppercase tracking-wider text-muted">
               <th className="py-2 pr-3 font-medium">Model</th>
               <th className="py-2 pr-3 font-medium">Category</th>
-              <th className="py-2 pr-3 font-medium">In/Out $/MTok</th>
               <th className="py-2 pr-3 font-medium">Context</th>
               <th className="py-2 pr-3 font-medium">Modalities</th>
               <th className="py-2 font-medium">Best for</th>
@@ -228,11 +229,6 @@ function RegistryTable() {
               <tr key={m.id} className="align-top text-ink-soft">
                 <td className="py-2 pr-3 font-mono text-ink">{m.name}</td>
                 <td className="py-2 pr-3 text-muted">{m.category}</td>
-                <td className="py-2 pr-3 tabular-nums text-muted">
-                  {m.costInput == null
-                    ? "usage"
-                    : `$${m.costInput.toFixed(2)} / ${m.costOutput == null ? "-" : "$" + m.costOutput.toFixed(2)}`}
-                </td>
                 <td className="py-2 pr-3 text-muted">{m.contextWindow}</td>
                 <td className="py-2 pr-3 text-muted">
                   {m.inputModalities.join("+")} → {m.outputModalities.join("+")}

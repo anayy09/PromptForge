@@ -61,7 +61,7 @@ export function ModeSelector({
       )}
 
       {mode === "ensemble" && (
-        <p className="mt-1 text-2xs text-faint">Runs several models; cost is the sum across them.</p>
+        <p className="mt-1 text-2xs text-faint">Runs several models and merges the strongest rewrite.</p>
       )}
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { AppCategory } from "@/lib/registry";
 import type { EvalResponse } from "@/lib/schema";
-import { formatCost, formatTokens } from "@/lib/format";
+import { formatTokens } from "@/lib/format";
 
 // Categories whose targets are not text models we can run-and-judge here.
 const UNSUPPORTED: AppCategory[] = ["image-gen", "data-viz-multimodal"];
@@ -120,7 +120,6 @@ function Verdict({ result }: { result: EvalResponse }) {
         <span className="ml-auto text-2xs tabular-nums text-muted">
           {result.target.name} · judged by {result.judge.name}
           {result.usage && ` · ${formatTokens(result.usage.promptTokens + result.usage.completionTokens)} tok`}
-          {` · ${formatCost(result.cost, result.costApproximate)}`}
         </span>
       </div>
 

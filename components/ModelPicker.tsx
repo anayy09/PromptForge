@@ -5,10 +5,10 @@ import {
   getRewriters,
   getTargetsForCategory,
   getById,
-  priceLabel,
   type AppCategory,
 } from "@/lib/registry";
 import { CATEGORIES } from "@/lib/categories";
+import { useModelAvailability } from "./useModelAvailability";
 
 // Categories where choosing a distinct target model is meaningful.
 const TARGETED: AppCategory[] = ["image-gen", "medical", "data-viz-multimodal"];
@@ -26,10 +26,11 @@ export function ModelPicker({
   onRewriter: (id: string) => void;
   onTarget: (id: string) => void;
 }) {
-  const rewriters = getRewriters();
+  const { filter } = useModelAvailability();
+  const rewriters = filter(getRewriters());
   const isDefault = rewriterId === CATEGORIES[category].defaultRewriterId;
   const showTarget = TARGETED.includes(category);
-  const targets = showTarget ? getTargetsForCategory(category) : [];
+  const targets = showTarget ? filter(getTargetsForCategory(category)) : [];
 
   return (
     <div
@@ -56,7 +57,7 @@ export function ModelPicker({
             </option>
           ))}
         </Select>
-        <span className="text-2xs tabular-nums text-faint">{priceLabel(rewriterId)}</span>
+        <span className="text-2xs text-faint">{getById(rewriterId)?.bestFor ?? ""}</span>
       </Field>
 
       {showTarget && (

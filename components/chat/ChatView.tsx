@@ -14,7 +14,9 @@ import {
   isImageModel,
   getSpeechModel,
   getTranscribeModel,
+  type RegistryModel,
 } from "@/lib/registry";
+import { useModelAvailability } from "../useModelAvailability";
 import {
   newId,
   saveConversation,
@@ -25,16 +27,19 @@ import {
 } from "@/lib/storage";
 
 // Preference order for the default everyday chat model. Gemma 4 is the primary
-// default — multimodal, 256K context, well-priced. Falls back through the list
-// if the registry does not include a given model.
+// default — multimodal with a large context — with its free OpenRouter twin
+// next, then strong text generalists from either provider.
 const CHAT_DEFAULTS = [
   "gemma-4-31b-it",
+  "google/gemma-4-31b-it:free",
   "gpt-oss-120b",
+  "nvidia/nemotron-3-super-120b-a12b:free",
   "llama-3.3-70b-instruct",
+  "meta-llama/llama-3.3-70b-instruct:free",
   "gpt-oss-20b",
+  "openai/gpt-oss-20b:free",
 ];
-function defaultChatModel(): string {
-  const models = getChatModels();
+function defaultChatModel(models: RegistryModel[] = getChatModels()): string {
   for (const id of CHAT_DEFAULTS) if (models.some((m) => m.id === id)) return id;
   return models[0]?.id ?? "";
 }
@@ -85,9 +90,17 @@ export function ChatView() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  // Capabilities are static (driven by which models the registry ships).
-  const canTranscribe = useMemo(() => !!getTranscribeModel(), []);
-  const canTts = useMemo(() => !!getSpeechModel(), []);
+  // Capabilities depend on which models the registry ships AND whether their
+  // provider is configured; unavailable features hide their affordances.
+  const { sources, isAvailable, filter } = useModelAvailability();
+  const canTranscribe = useMemo(() => {
+    const m = getTranscribeModel();
+    return !!m && isAvailable(m);
+  }, [isAvailable]);
+  const canTts = useMemo(() => {
+    const m = getSpeechModel();
+    return !!m && isAvailable(m);
+  }, [isAvailable]);
   const imageMode = isImageModel(modelId);
   const visionCapable = supportsVision(modelId);
 
@@ -96,6 +109,14 @@ export function ChatView() {
     setModelId(defaultChatModel());
     getConversations().then(setConversations).catch(() => {});
   }, []);
+
+  // Once availability is known, move off a model whose provider is missing.
+  useEffect(() => {
+    if (!sources || !modelId) return;
+    const current = getById(modelId);
+    if (current && sources.includes(current.source)) return;
+    setModelId(defaultChatModel(filter(getChatModels())));
+  }, [sources, modelId, filter]);
 
   // Auto-scroll to the newest content while it streams.
   useEffect(() => {
