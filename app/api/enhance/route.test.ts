@@ -3,6 +3,10 @@ import { describe, it, expect, vi } from "vitest";
 // Mock the endpoint client so no live call is made. Returns a fixed, valid ModelOutput + usage.
 vi.mock("@/lib/client", () => ({
   isConfigured: () => true,
+  isModelAvailable: () => true,
+  availableOf: <T,>(list: T) => list,
+  resolveAvailableRewriter: (id: string) => id,
+  configuredSources: () => ['navigator', 'openrouter'],
   callRewriter: vi.fn(async () => ({
     output: { enhancedPrompt: "REWRITTEN PROMPT", changes: [], assumptions: [] },
     usage: { promptTokens: 100, completionTokens: 50 },

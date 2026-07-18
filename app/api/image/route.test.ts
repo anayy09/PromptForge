@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/lib/client", () => ({
   isConfigured: () => true,
+  isModelAvailable: () => true,
+  availableOf: <T,>(list: T) => list,
+  resolveAvailableRewriter: (id: string) => id,
+  configuredSources: () => ['navigator', 'openrouter'],
   generateImage: vi.fn(async () => "data:image/png;base64,AAAA"),
 }));
 
