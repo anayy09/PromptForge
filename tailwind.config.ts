@@ -25,6 +25,8 @@ const config: Config = {
         surface: oklch("--surface"),
         "surface-2": oklch("--surface-2"),
         sunken: oklch("--sunken"),
+        raised: oklch("--raised"),
+        scrim: oklch("--scrim"),
         hairline: oklch("--hairline"),
         "hairline-strong": oklch("--hairline-strong"),
         ink: oklch("--ink"),
@@ -81,6 +83,10 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "pop-in": {
+          "0%": { opacity: "0", transform: "translateY(4px) scale(0.985)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
         "spark": {
           "0%": { opacity: "0", transform: "translateY(0) scale(1)" },
           "20%": { opacity: "1" },
@@ -91,6 +97,7 @@ const config: Config = {
         "ember-pulse": "ember-pulse 1.6s ease-in-out infinite",
         "forge-sweep": "forge-sweep 1.1s cubic-bezier(0.22, 1, 0.36, 1) infinite",
         "rise-in": "rise-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "pop-in": "pop-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

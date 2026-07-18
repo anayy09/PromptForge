@@ -123,7 +123,7 @@ export function MessageBubble({
 
   if (turn.role === "user") {
     return (
-      <div className="flex flex-col items-end gap-1.5">
+      <div className="flex animate-rise-in flex-col items-end gap-1.5">
         {turn.attachments && turn.attachments.length > 0 && (
           <div className="max-w-[85%]">
             <ImageGrid images={turn.attachments} />
@@ -135,7 +135,7 @@ export function MessageBubble({
           </div>
         )}
         {turn.content && (
-          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-ember/[0.10] px-3.5 py-2 text-sm leading-relaxed text-ink">
+          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl border border-ember/15 bg-ember/[0.07] px-3.5 py-2 text-sm leading-relaxed text-ink">
             {turn.content}
           </div>
         )}
@@ -146,7 +146,7 @@ export function MessageBubble({
   const hasImages = turn.images && turn.images.length > 0;
 
   return (
-    <div className="group flex gap-3">
+    <div className="group flex animate-rise-in gap-3">
       <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ember/12 text-ember">
         <Wand2 size={14} aria-hidden />
       </div>

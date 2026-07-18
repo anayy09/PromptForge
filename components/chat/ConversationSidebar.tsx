@@ -2,6 +2,7 @@
 
 import { Plus, MessageSquare, Trash2 } from "lucide-react";
 import type { Conversation } from "@/lib/storage";
+import { relativeTime } from "@/lib/format";
 
 export function ConversationSidebar({
   conversations,
@@ -37,12 +38,15 @@ export function ConversationSidebar({
                 <li key={c.id} className="group relative">
                   <button
                     onClick={() => onSelect(c.id)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
+                    className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
                       active ? "bg-surface-2 text-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
                     }`}
                   >
-                    <MessageSquare size={13} className="shrink-0" aria-hidden />
-                    <span className="truncate pr-5">{c.title || "Untitled"}</span>
+                    <MessageSquare size={13} className="mt-0.5 shrink-0" aria-hidden />
+                    <span className="min-w-0 flex-1 pr-5">
+                      <span className="block truncate">{c.title || "Untitled"}</span>
+                      <span className="block text-2xs text-faint">{relativeTime(c.updatedAt)}</span>
+                    </span>
                   </button>
                   <button
                     onClick={() => onDelete(c.id)}

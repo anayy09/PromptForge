@@ -14,6 +14,28 @@ import { Providers } from "./providers";
 import { Wordmark } from "./Wordmark";
 import { ThemeToggle } from "./ThemeToggle";
 import { ConnectivityDot } from "./ConnectivityDot";
+import { CommandPalette } from "./CommandPalette";
+import { Kbd } from "./controls";
+import { Search } from "lucide-react";
+
+/** Header affordance for the palette; the hotkey works everywhere. */
+function PaletteButton() {
+  return (
+    <button
+      onClick={() =>
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+        )
+      }
+      className="hidden h-8 items-center gap-2 rounded-full border border-hairline bg-surface px-3 text-2xs text-muted transition-colors hover:border-hairline-strong hover:text-ink md:inline-flex"
+      aria-label="Open command palette"
+    >
+      <Search size={13} aria-hidden />
+      <span>Jump to</span>
+      <Kbd>⌘K</Kbd>
+    </button>
+  );
+}
 
 // The two co-equal products. Everything else is secondary utility.
 const PRODUCTS: { href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }[] = [
@@ -107,6 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="ml-auto flex items-center gap-2 sm:ml-0">
+              <PaletteButton />
               <ConnectivityDot />
               <div className="mx-1 hidden h-5 w-px bg-hairline sm:block" />
               <UtilityNav />
@@ -125,13 +148,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
 
         <footer className="border-t border-hairline">
-          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-2xs text-muted sm:px-6">
-            <span className="text-faint">
-              Enhance rewrites your prompts. Chat answers them. Two tools, one workspace.
-            </span>
-            <span className="ml-auto tabular-nums text-faint">local-first</span>
+          <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-2xs text-faint sm:px-6">
+            <span>Enhance rewrites prompts. Chat answers them.</span>
+            <span className="ml-auto tabular-nums">history stays on this device</span>
           </div>
         </footer>
+
+        <CommandPalette />
       </div>
     </Providers>
   );

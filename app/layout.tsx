@@ -32,8 +32,9 @@ export const viewport: Viewport = {
   ],
 };
 
-// Applies the persisted theme before first paint to avoid a flash.
-const themeInit = `(function(){try{var s=localStorage.getItem('promptforge.settings.v1');var t=s?JSON.parse(s).theme:'system';var d=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+// Applies persisted theme + appearance (accent hue, density, motion) before
+// first paint to avoid a flash. Hues must match ACCENT_PRESETS in lib/storage.
+const themeInit = `(function(){try{var s=JSON.parse(localStorage.getItem('promptforge.settings.v2')||'{}');var r=document.documentElement;var t=s.theme||'system';r.classList.toggle('dark',t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches));var H={ember:46,magma:25,brass:75,verdigris:165,steel:245,violet:305};if(s.accent&&H[s.accent])r.style.setProperty('--accent-h',String(H[s.accent]));if(s.density==='compact'||s.density==='relaxed')r.setAttribute('data-density',s.density);if(s.motion==='reduced')r.setAttribute('data-motion','reduced');}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

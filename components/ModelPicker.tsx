@@ -50,26 +50,26 @@ export function ModelPicker({
           )
         }
       >
-        <Select value={rewriterId} onChange={onRewriter} ariaLabel="Model that rewrites">
-          {rewriters.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name} · {m.category}
-            </option>
-          ))}
-        </Select>
+        <Select
+          value={rewriterId}
+          onChange={onRewriter}
+          ariaLabel="Model that rewrites"
+          options={rewriters.map((m) => ({ value: m.id, label: m.name, hint: m.category }))}
+        />
         <span className="text-2xs text-faint">{getById(rewriterId)?.bestFor ?? ""}</span>
       </Field>
 
       {showTarget && (
         <Field label="Optimized for" hint={<span className="text-steel">where you will use it</span>}>
-          <Select value={targetId} onChange={onTarget} ariaLabel="Target model">
-            <option value="">auto</option>
-            {targets.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} · {m.category}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={targetId}
+            onChange={onTarget}
+            ariaLabel="Target model"
+            options={[
+              { value: "", label: "auto" },
+              ...targets.map((m) => ({ value: m.id, label: m.name, hint: m.category })),
+            ]}
+          />
           <span className="text-2xs tabular-nums text-faint">
             {targetId ? getById(targetId)?.bestFor ?? "" : "no specific target"}
           </span>

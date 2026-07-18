@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Check, ChevronDown } from "lucide-react";
 
 export function Field({
   label,
@@ -23,33 +23,168 @@ export function Field({
   );
 }
 
+export interface SelectOption {
+  value: string;
+  label: string;
+  /** Secondary text shown right-aligned in the list, e.g. a category. */
+  hint?: string;
+  /** Optional group header the option renders under. */
+  group?: string;
+}
+
+/**
+ * Custom listbox select. Replaces native <select> so the open menu matches the
+ * design system on every OS instead of the browser's built-in dropdown.
+ * Keyboard: Enter/Space/ArrowDown opens, arrows move, Enter picks, Esc closes.
+ */
 export function Select({
   value,
   onChange,
-  children,
+  options,
   ariaLabel,
+  placeholder = "Select…",
+  variant = "field",
+  leading,
 }: {
   value: string;
   onChange: (v: string) => void;
-  children: ReactNode;
+  options: SelectOption[];
   ariaLabel?: string;
+  placeholder?: string;
+  /** "field": block form control. "pill": compact inline chip. */
+  variant?: "field" | "pill";
+  /** Optional icon rendered before the label in the trigger. */
+  leading?: ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const selected = useMemo(() => options.find((o) => o.value === value), [options, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      const i = Math.max(0, options.findIndex((o) => o.value === value));
+      setIndex(i);
+      requestAnimationFrame(() =>
+        listRef.current
+          ?.querySelector(`[data-index="${i}"]`)
+          ?.scrollIntoView({ block: "nearest" }),
+      );
+    }
+  }, [open, options, value]);
+
+  const move = (delta: number) => {
+    setIndex((i) => {
+      const next = Math.min(Math.max(i + delta, 0), options.length - 1);
+      listRef.current
+        ?.querySelector(`[data-index="${next}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+      return next;
+    });
+  };
+
+  const pick = (i: number) => {
+    const opt = options[i];
+    if (!opt) return;
+    onChange(opt.value);
+    setOpen(false);
+  };
+
+  const triggerClass =
+    variant === "pill"
+      ? "inline-flex w-auto items-center gap-1.5 rounded-full border border-hairline bg-surface py-1 pl-2.5 pr-2 text-xs font-medium text-ink transition-colors hover:border-hairline-strong"
+      : "flex w-full items-center gap-2 rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink transition-colors hover:border-hairline-strong";
+
+  let lastGroup: string | undefined;
+
   return (
-    <div className="relative">
-      <select
+    <div ref={rootRef} className={variant === "pill" ? "relative inline-flex" : "relative"}>
+      <button
+        type="button"
         aria-label={ariaLabel}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        suppressHydrationWarning
-        className="w-full appearance-none rounded-lg border border-hairline bg-surface px-3 py-2 pr-8 text-sm text-ink transition-colors hover:border-hairline-strong focus:border-ember focus:outline-none"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (!open && (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            setOpen(true);
+          } else if (open) {
+            if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+            else if (e.key === "Enter") { e.preventDefault(); pick(index); }
+            else if (e.key === "Tab") setOpen(false);
+          }
+        }}
+        className={`${triggerClass} ${open ? "border-ember" : ""} focus:border-ember focus:outline-none`}
       >
-        {children}
-      </select>
-      <ChevronDown
-        size={14}
-        aria-hidden
-        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted"
-      />
+        {leading && <span className="shrink-0 text-ember">{leading}</span>}
+        <span className={`min-w-0 flex-1 truncate text-left ${selected ? "" : "text-faint"}`}>
+          {selected?.label ?? placeholder}
+        </span>
+        <ChevronDown
+          size={variant === "pill" ? 13 : 14}
+          aria-hidden
+          className={`shrink-0 text-muted transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label={ariaLabel}
+          className="absolute left-0 top-[calc(100%+4px)] z-40 max-h-72 w-full min-w-52 animate-pop-in overflow-y-auto rounded-xl border border-hairline bg-raised p-1 shadow-lifted"
+        >
+          {options.map((o, i) => {
+            const header = o.group && o.group !== lastGroup ? o.group : null;
+            lastGroup = o.group;
+            const active = o.value === value;
+            return (
+              <div key={`${o.value}-${i}`}>
+                {header && (
+                  <p className="px-2.5 pb-1 pt-2 text-2xs font-medium uppercase tracking-wider text-faint">
+                    {header}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  data-index={i}
+                  onMouseEnter={() => setIndex(i)}
+                  onClick={() => pick(i)}
+                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors ${
+                    i === index ? "bg-surface-2 text-ink" : "text-ink-soft"
+                  }`}
+                >
+                  <span className="min-w-0 flex-1 truncate">{o.label}</span>
+                  {o.hint && <span className="shrink-0 text-2xs text-faint">{o.hint}</span>}
+                  {active && <Check size={13} aria-hidden className="shrink-0 text-ember" />}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -88,6 +223,15 @@ export function Segmented<T extends string>({
         );
       })}
     </div>
+  );
+}
+
+/** Keyboard-hint chip, e.g. <Kbd>⌘K</Kbd>. */
+export function Kbd({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="rounded border border-hairline bg-surface px-1.5 py-0.5 font-mono text-2xs text-muted shadow-[inset_0_-1px_0_oklch(var(--hairline))]">
+      {children}
+    </kbd>
   );
 }
 

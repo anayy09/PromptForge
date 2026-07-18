@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { CATEGORY_ORDER } from "@/lib/categories";
 import { CATEGORY_META } from "./categoryMeta";
+import { Select } from "./controls";
 import type { AppCategory } from "@/lib/registry";
 
 /**
@@ -27,29 +28,14 @@ export function SimpleCategoryBar({
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
       <span>Treating this as</span>
-      <span className="relative inline-flex items-center">
-        <span className="pointer-events-none absolute left-2.5 inline-flex text-ember">
-          <Icon size={14} strokeWidth={2} aria-hidden />
-        </span>
-        <select
-          aria-label="Type of task"
-          value={value}
-          onChange={(e) => onChange(e.target.value as AppCategory)}
-          suppressHydrationWarning
-          className="appearance-none rounded-full border border-hairline bg-surface py-1 pl-8 pr-7 text-xs font-medium text-ink transition-colors hover:border-hairline-strong focus:border-ember focus:outline-none"
-        >
-          {CATEGORY_ORDER.map((id) => (
-            <option key={id} value={id}>
-              {CATEGORY_META[id].label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={13}
-          aria-hidden
-          className="pointer-events-none absolute right-2.5 text-muted"
-        />
-      </span>
+      <Select
+        variant="pill"
+        ariaLabel="Type of task"
+        value={value}
+        onChange={(v) => onChange(v as AppCategory)}
+        leading={<Icon size={14} strokeWidth={2} aria-hidden />}
+        options={CATEGORY_ORDER.map((id) => ({ value: id, label: CATEGORY_META[id].label }))}
+      />
       {detecting ? (
         <span className="inline-flex items-center gap-1 text-faint">
           <Loader2 size={12} className="animate-spin" aria-hidden />

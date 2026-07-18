@@ -170,6 +170,17 @@ export async function clearConversations(): Promise<void> {
 
 /* ---------------------------------- Settings --------------------------------- */
 
+/** Accent presets: OKLCH hue angles the whole ember system derives from. */
+export const ACCENT_PRESETS = [
+  { id: "ember", label: "Ember", hue: 46 },
+  { id: "magma", label: "Magma", hue: 25 },
+  { id: "brass", label: "Brass", hue: 75 },
+  { id: "verdigris", label: "Verdigris", hue: 165 },
+  { id: "steel", label: "Steel", hue: 245 },
+  { id: "violet", label: "Violet", hue: 305 },
+] as const;
+export type AccentId = (typeof ACCENT_PRESETS)[number]["id"];
+
 export interface Settings {
   theme: "light" | "dark" | "system";
   defaultCategory: AppCategory;
@@ -178,6 +189,10 @@ export interface Settings {
   requestVariants: boolean;
   /** Enhance surface: show the full control set instead of the simple flow. */
   advancedMode: boolean;
+  /** Appearance: accent hue preset, UI density, motion preference. */
+  accent: AccentId;
+  density: "compact" | "comfortable" | "relaxed";
+  motion: "system" | "reduced";
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -187,6 +202,9 @@ export const DEFAULT_SETTINGS: Settings = {
   knobs: { preserveWording: true },
   requestVariants: false,
   advancedMode: false,
+  accent: "ember",
+  density: "comfortable",
+  motion: "system",
 };
 
 const SETTINGS_KEY = "promptforge.settings.v2";

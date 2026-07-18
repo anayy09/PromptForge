@@ -70,7 +70,7 @@ export function EnhancedOutput({
               result.enhancedPrompt,
               "",
               "## What changed",
-              ...result.changes.map((c) => `- ${c.what} — ${c.why}`),
+              ...result.changes.map((c) => `- ${c.what}: ${c.why}`),
             ].join("\n"),
           )
         }
@@ -122,7 +122,7 @@ export function EnhancedOutput({
                     <Check size={15} className="mt-0.5 shrink-0 text-quench" aria-hidden />
                     <span>
                       <span className="text-ink">{c.what}</span>
-                      <span className="text-muted"> — {c.why}</span>
+                      <span className="text-muted">: {c.why}</span>
                     </span>
                   </li>
                 ))}
@@ -262,7 +262,7 @@ export function EnhancedOutput({
                 <Check size={15} className="mt-0.5 shrink-0 text-quench" aria-hidden />
                 <span className="text-sm leading-relaxed">
                   <span className="text-ink">{c.what}</span>
-                  <span className="text-muted"> — {c.why}</span>
+                  <span className="text-muted">: {c.why}</span>
                 </span>
               </li>
             ))}
@@ -380,17 +380,32 @@ function VariantRow({ index, text }: { index: number; text: string }) {
 }
 
 function EmptyState() {
+  const steps: [string, string][] = [
+    ["1", "Describe what you want the AI to do, in your own words."],
+    ["2", "PromptForge rewrites it: clearer, structured, ready to paste."],
+    ["3", "Review what changed, then copy it into any assistant."],
+  ];
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-hairline-strong/60 bg-surface/40 p-8 text-center">
+    <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-hairline-strong/60 bg-surface/40 p-8">
       <div className="forge-grid pointer-events-none absolute inset-0 opacity-60" />
-      <div className="relative">
-        <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-ember/10 text-ember">
+      <div className="relative w-full max-w-sm">
+        <div className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-ember/10 text-ember">
           <Wand2 size={20} aria-hidden />
         </div>
-        <p className="text-sm font-medium text-ink">Your improved prompt appears here</p>
-        <p className="mt-1 max-w-xs text-xs leading-relaxed text-muted">
-          Type what you want the AI to do, then press Improve. You will get a cleaner prompt you can
-          copy anywhere.
+        <p className="text-sm font-semibold text-ink">Your improved prompt appears here</p>
+        <ul className="mt-3 flex flex-col gap-2">
+          {steps.map(([n, s]) => (
+            <li key={n} className="flex gap-2.5 text-xs leading-relaxed text-muted">
+              <span className="font-mono text-ember">{n}.</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 border-t border-hairline pt-3 text-2xs text-faint">
+          <kbd className="rounded border border-hairline bg-surface px-1 py-0.5 font-mono">⌘⏎</kbd>{" "}
+          improves from anywhere in the editor ·{" "}
+          <kbd className="rounded border border-hairline bg-surface px-1 py-0.5 font-mono">⌘K</kbd>{" "}
+          jumps around the app
         </p>
       </div>
     </div>
@@ -399,18 +414,23 @@ function EmptyState() {
 
 function LoadingState() {
   return (
-    <div className="panel flex flex-1 flex-col overflow-hidden rounded-xl">
+    <div className="panel relative flex flex-1 flex-col overflow-hidden rounded-xl" aria-busy="true">
       <div className="flex items-center gap-2 border-b border-hairline px-4 py-3 text-sm font-medium text-muted">
-        <Wand2 size={15} className="animate-pulse text-ember" aria-hidden /> Improving your prompt…
+        <Wand2 size={15} className="animate-ember-pulse text-ember" aria-hidden /> Improving your
+        prompt…
+      </div>
+      {/* the forge moment: a molten sweep under the header while work happens */}
+      <div className="relative h-0.5 overflow-hidden">
+        <div className="forge-bar absolute inset-y-0 w-1/3 animate-forge-sweep" />
       </div>
       <div className="flex-1 space-y-2.5 p-4">
         {[92, 78, 85, 64, 88, 72, 40].map((w, i) => (
-          <div
-            key={i}
-            className="h-3 animate-ember-pulse rounded-full bg-surface-2"
-            style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }}
-          />
+          <div key={i} className="skeleton h-3.5" style={{ width: `${w}%` }} />
         ))}
+        <div className="pt-3" />
+        <div className="skeleton h-3 w-24" />
+        <div className="skeleton h-3.5 w-4/5" />
+        <div className="skeleton h-3.5 w-3/5" />
       </div>
     </div>
   );

@@ -5,52 +5,59 @@
 /*
  * PromptForge tokens. Values are OKLCH "L C H" triplets consumed by
  * tailwind.config.ts as oklch(var(--x) / <alpha>). Neutrals are tinted toward
- * the ember hue (warm) rather than pure gray. Never #000 / #fff.
+ * the accent hue (warm) rather than pure gray. Never #000 / #fff.
+ *
+ * --accent-h is the user-customizable accent hue (Settings > Appearance).
+ * Ember derives from it, so the whole accent system re-tunes from one number.
  */
 :root {
-  --canvas: 0.986 0.004 70;
-  --surface: 0.968 0.005 68;
-  --surface-2: 0.949 0.007 66;
-  --sunken: 0.935 0.009 64;
-  --hairline: 0.885 0.008 60;
-  --hairline-strong: 0.78 0.012 58;
-  --ink: 0.245 0.014 52;
-  --ink-soft: 0.42 0.012 52;
-  --muted: 0.56 0.010 54;
-  --faint: 0.7 0.008 56;
-  --ember: 0.64 0.185 46;
-  --ember-strong: 0.56 0.2 40;
-  --ember-soft: 0.93 0.035 62;
+  --accent-h: 46;
+
+  --canvas: 0.988 0.004 70;
+  --surface: 0.972 0.005 68;
+  --surface-2: 0.951 0.007 66;
+  --sunken: 0.938 0.009 64;
+  --raised: 0.995 0.003 72;
+  --hairline: 0.89 0.008 60;
+  --hairline-strong: 0.79 0.012 58;
+  --ink: 0.235 0.014 52;
+  --ink-soft: 0.41 0.012 52;
+  --muted: 0.55 0.010 54;
+  --faint: 0.69 0.008 56;
+  --ember: 0.62 0.19 var(--accent-h);
+  --ember-strong: 0.54 0.2 calc(var(--accent-h) - 6);
+  --ember-soft: 0.93 0.035 calc(var(--accent-h) + 16);
   --steel: 0.55 0.09 245;
   --steel-soft: 0.93 0.02 240;
   --quench: 0.62 0.115 168;
   --danger: 0.57 0.2 27;
   --on-ember: 0.99 0.005 70;
-
-  /* --font-mono / --font-sans are provided by next/font in app/layout.tsx. */
+  --scrim: 0.25 0.012 52;
 
   color-scheme: light;
 }
 
 .dark {
-  --canvas: 0.195 0.008 56;
-  --surface: 0.232 0.01 56;
-  --surface-2: 0.268 0.012 57;
-  --sunken: 0.17 0.008 56;
-  --hairline: 0.32 0.012 58;
-  --hairline-strong: 0.42 0.014 58;
-  --ink: 0.945 0.006 74;
-  --ink-soft: 0.8 0.008 70;
-  --muted: 0.64 0.01 62;
+  --canvas: 0.172 0.008 56;
+  --surface: 0.212 0.01 56;
+  --surface-2: 0.252 0.012 57;
+  --sunken: 0.148 0.008 56;
+  --raised: 0.235 0.011 57;
+  --hairline: 0.30 0.012 58;
+  --hairline-strong: 0.41 0.014 58;
+  --ink: 0.95 0.006 74;
+  --ink-soft: 0.81 0.008 70;
+  --muted: 0.65 0.01 62;
   --faint: 0.5 0.01 60;
-  --ember: 0.74 0.17 52;
-  --ember-strong: 0.8 0.155 58;
-  --ember-soft: 0.32 0.06 46;
+  --ember: 0.75 0.165 calc(var(--accent-h) + 6);
+  --ember-strong: 0.81 0.15 calc(var(--accent-h) + 12);
+  --ember-soft: 0.30 0.055 var(--accent-h);
   --steel: 0.74 0.09 238;
-  --steel-soft: 0.34 0.04 240;
+  --steel-soft: 0.33 0.04 240;
   --quench: 0.76 0.12 168;
   --danger: 0.68 0.185 27;
-  --on-ember: 0.2 0.02 50;
+  --on-ember: 0.18 0.02 50;
+  --scrim: 0.08 0.006 56;
 
   color-scheme: dark;
 }
@@ -63,6 +70,15 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Density: the whole rem scale rides on the root font size, so one value
+   * re-tunes spacing and type together. Set via Settings > Appearance. */
+  html[data-density="compact"] {
+    font-size: 14.5px;
+  }
+  html[data-density="relaxed"] {
+    font-size: 17px;
   }
 
   /* Body reads in a friendly sans; monospace is reserved for prompt text,
@@ -141,6 +157,33 @@
       transparent
     );
   }
+
+  /* Skeleton shimmer for loading states (product rule: skeletons, not
+   * spinners in the middle of content). */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: oklch(var(--surface-2));
+    border-radius: 6px;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(var(--raised) / 0.85),
+      transparent
+    );
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-sweep {
+    100% {
+      transform: translateX(100%);
+    }
+  }
 }
 
 @layer utilities {
@@ -150,14 +193,22 @@
   .text-pretty {
     text-wrap: pretty;
   }
-  /* Respect reduced-motion: kill decorative animation. */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-    }
+}
+
+/* Respect reduced motion, from the OS or from Settings > Appearance. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
+}
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }

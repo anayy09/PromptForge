@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
+  ACCENT_PRESETS,
   DEFAULT_SETTINGS,
   loadSettings,
   saveSettings,
@@ -29,6 +30,18 @@ function applyTheme(theme: Settings["theme"]): "light" | "dark" {
   return dark ? "dark" : "light";
 }
 
+/** Appearance settings ride on the root element: accent hue, density, motion. */
+function applyAppearance(s: Settings) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const hue = ACCENT_PRESETS.find((p) => p.id === s.accent)?.hue ?? 46;
+  root.style.setProperty("--accent-h", String(hue));
+  if (s.density === "comfortable") root.removeAttribute("data-density");
+  else root.setAttribute("data-density", s.density);
+  if (s.motion === "reduced") root.setAttribute("data-motion", "reduced");
+  else root.removeAttribute("data-motion");
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [hydrated, setHydrated] = useState(false);
@@ -39,6 +52,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const loaded = loadSettings();
     setSettings(loaded);
     setResolvedTheme(applyTheme(loaded.theme));
+    applyAppearance(loaded);
     setHydrated(true);
   }, []);
 
@@ -56,6 +70,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       const next = { ...prev, ...patch };
       saveSettings(next);
       if (patch.theme) setResolvedTheme(applyTheme(patch.theme));
+      if (patch.accent || patch.density || patch.motion) applyAppearance(next);
       return next;
     });
   };

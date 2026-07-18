@@ -6,6 +6,7 @@ import { Field, Select, Segmented, Toggle } from "@/components/controls";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/categories";
 import { getRewriters, getAll, getById, type AppCategory } from "@/lib/registry";
 import { useModelAvailability } from "@/components/useModelAvailability";
+import { ACCENT_PRESETS } from "@/lib/storage";
 
 export default function SettingsPage() {
   const { settings, update, hydrated } = useSettings();
@@ -27,21 +28,11 @@ export default function SettingsPage() {
 
       <EndpointStatus />
 
-      <Section title="Defaults">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Default category">
-            <Select
-              value={settings.defaultCategory}
-              onChange={(v) => update({ defaultCategory: v as AppCategory })}
-              ariaLabel="Default category"
-            >
-              {CATEGORY_ORDER.map((id) => (
-                <option key={id} value={id}>
-                  {CATEGORIES[id].label}
-                </option>
-              ))}
-            </Select>
-          </Field>
+      <Section
+        title="Appearance"
+        hint="How the workspace looks and moves. Applied instantly, saved on this device."
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Theme">
             <Segmented
               ariaLabel="Theme"
@@ -52,6 +43,73 @@ export default function SettingsPage() {
                 { value: "dark", label: "dark" },
                 { value: "system", label: "system" },
               ]}
+            />
+          </Field>
+          <Field label="Density" hint={<span className="text-faint">scales the whole UI</span>}>
+            <Segmented
+              ariaLabel="Density"
+              value={settings.density}
+              onChange={(v) => update({ density: v })}
+              options={[
+                { value: "compact", label: "compact" },
+                { value: "comfortable", label: "cozy" },
+                { value: "relaxed", label: "relaxed" },
+              ]}
+            />
+          </Field>
+          <Field label="Motion">
+            <Segmented
+              ariaLabel="Motion"
+              value={settings.motion}
+              onChange={(v) => update({ motion: v })}
+              options={[
+                { value: "system", label: "system" },
+                { value: "reduced", label: "reduced" },
+              ]}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-4">
+          <Field label="Accent" hint={<span className="text-faint">colors actions and highlights</span>}>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Accent color">
+              {ACCENT_PRESETS.map((p) => {
+                const active = settings.accent === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    role="radio"
+                    aria-checked={active}
+                    title={p.label}
+                    onClick={() => update({ accent: p.id })}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                      active
+                        ? "border-ember bg-ember/10 text-ink"
+                        : "border-hairline bg-surface text-ink-soft hover:border-hairline-strong"
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className="h-3 w-3 rounded-full"
+                      style={{ background: `oklch(0.62 0.19 ${p.hue})` }}
+                    />
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="Defaults">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Default category">
+            <Select
+              value={settings.defaultCategory}
+              onChange={(v) => update({ defaultCategory: v as AppCategory })}
+              ariaLabel="Default category"
+              options={CATEGORY_ORDER.map((id) => ({ value: id, label: CATEGORIES[id].label }))}
             />
           </Field>
         </div>
@@ -144,13 +202,8 @@ export default function SettingsPage() {
                     update({ rewriterOverrides: { ...settings.rewriterOverrides, [id]: v } })
                   }
                   ariaLabel={`Rewriter for ${CATEGORIES[id].label}`}
-                >
-                  {rewriters.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </Select>
+                  options={rewriters.map((m) => ({ value: m.id, label: m.name }))}
+                />
                 <span className="text-2xs text-faint">{getById(current)?.bestFor ?? ""}</span>
               </Field>
             );
