@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ChatTurn } from "@/lib/storage";
 import { Markdown } from "./Markdown";
+import { WaitingLines } from "../WaitingLines";
 import { useCopy } from "../useCopy";
 
 function formatSize(bytes: number): string {
@@ -157,14 +158,17 @@ export function MessageBubble({
         ) : (
           !hasImages &&
           streaming && (
-            <span className="inline-flex gap-1 py-1.5" aria-label="Assistant is working">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 animate-ember-pulse rounded-full bg-muted"
-                  style={{ animationDelay: `${i * 160}ms` }}
-                />
-              ))}
+            <span className="inline-flex items-center gap-2.5 py-1.5" aria-label="Assistant is working">
+              <span className="inline-flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 w-1.5 animate-ember-pulse rounded-full bg-muted"
+                    style={{ animationDelay: `${i * 160}ms` }}
+                  />
+                ))}
+              </span>
+              <WaitingLines variant="chat" className="!text-2xs !text-faint" />
             </span>
           )
         )}

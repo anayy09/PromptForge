@@ -530,7 +530,7 @@ function EmptyChat({ imageMode, onPick }: { imageMode: boolean; onPick: (text: s
           <button
             key={s}
             onClick={() => onPick(s)}
-            className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-left text-xs leading-relaxed text-ink-soft shadow-soft transition-colors hover:border-ember hover:text-ink"
+            className="rounded-xl border border-hairline bg-surface px-3.5 py-2.5 text-left text-xs leading-relaxed text-ink-soft shadow-soft transition-all duration-150 hover:-translate-y-0.5 hover:border-ember hover:text-ink hover:shadow-card active:translate-y-0"
           >
             {s}
           </button>

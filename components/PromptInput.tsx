@@ -75,7 +75,7 @@ export function PromptInput({
                   onChange(s);
                   ref.current?.focus();
                 }}
-                className="rounded-full border border-hairline bg-surface px-2.5 py-1 text-2xs text-ink-soft transition-colors hover:border-ember hover:text-ember"
+                className="rounded-full border border-hairline bg-surface px-2.5 py-1 text-2xs text-ink-soft transition-all duration-150 hover:-translate-y-px hover:border-ember hover:text-ember active:translate-y-0"
               >
                 {s}
               </button>

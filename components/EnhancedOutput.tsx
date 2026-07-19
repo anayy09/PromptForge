@@ -7,6 +7,7 @@ import { diffWords, diffStats } from "@/lib/diff";
 import { lintPrompt } from "@/lib/lint";
 import { formatTokens } from "@/lib/format";
 import { PromptScore } from "./PromptScore";
+import { WaitingLines } from "./WaitingLines";
 import { useCopy } from "./useCopy";
 
 type Tab = "prompt" | "diff" | "changes" | "assumptions" | "variants" | "method";
@@ -58,9 +59,9 @@ export function EnhancedOutput({
     <div className="flex items-center gap-2 border-t border-hairline px-3 py-2.5">
       <button
         onClick={() => copy(result.enhancedPrompt)}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-ember px-3 py-1.5 text-xs font-semibold text-on-ember shadow-soft transition-colors hover:bg-ember-strong"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-ember px-3 py-1.5 text-xs font-semibold text-on-ember shadow-soft transition-all duration-150 hover:bg-ember-strong active:scale-[0.97]"
       >
-        {copied ? <Check size={14} aria-hidden /> : <Copy size={14} aria-hidden />}
+        {copied ? <Check size={14} aria-hidden className="animate-pop-in" /> : <Copy size={14} aria-hidden />}
         {copied ? "Copied" : "Copy prompt"}
       </button>
       <button
@@ -225,8 +226,8 @@ export function EnhancedOutput({
           })}
       </div>
 
-      {/* body */}
-      <div className="min-h-[220px] flex-1 overflow-auto p-4">
+      {/* body: keyed so switching tabs cross-fades instead of snapping */}
+      <div key={activeTab} className="min-h-[220px] flex-1 animate-fade-in overflow-auto p-4">
         {activeTab === "prompt" && (
           <div className="flex flex-col gap-3">
             {enhancedLint && (
@@ -428,6 +429,9 @@ function LoadingState() {
       {/* the forge moment: a molten sweep under the header while work happens */}
       <div className="relative h-0.5 overflow-hidden">
         <div className="forge-bar absolute inset-y-0 w-1/3 animate-forge-sweep" />
+      </div>
+      <div className="border-b border-hairline/60 px-4 py-2.5">
+        <WaitingLines variant="enhance" />
       </div>
       <div className="flex-1 space-y-2.5 p-4">
         {[92, 78, 85, 64, 88, 72, 40].map((w, i) => (

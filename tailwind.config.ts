@@ -87,6 +87,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(4px) scale(0.985)" },
           "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(3px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
         "spark": {
           "0%": { opacity: "0", transform: "translateY(0) scale(1)" },
           "20%": { opacity: "1" },
@@ -98,6 +106,8 @@ const config: Config = {
         "forge-sweep": "forge-sweep 1.1s cubic-bezier(0.22, 1, 0.36, 1) infinite",
         "rise-in": "rise-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both",
         "pop-in": "pop-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "fade-in": "fade-in 0.22s ease-out both",
+        "fade-up": "fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },
