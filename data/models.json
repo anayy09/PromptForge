@@ -427,7 +427,7 @@
   },
   {
     "id": "tencent/hy3:free",
-    "name": "Hy3 (free)",
+    "name": "Hy3",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -446,7 +446,7 @@
   },
   {
     "id": "poolside/laguna-xs-2.1:free",
-    "name": "Laguna XS 2.1 (free)",
+    "name": "Laguna XS 2.1",
     "costInput": 0,
     "costOutput": 0,
     "category": "Code",
@@ -465,7 +465,7 @@
   },
   {
     "id": "cohere/north-mini-code:free",
-    "name": "North Mini Code (free)",
+    "name": "North Mini Code",
     "costInput": 0,
     "costOutput": 0,
     "category": "Code",
@@ -484,7 +484,7 @@
   },
   {
     "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "name": "Nemotron 3 Ultra 550B (free)",
+    "name": "Nemotron 3 Ultra 550B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -503,7 +503,7 @@
   },
   {
     "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-    "name": "Nemotron 3 Nano Omni (free)",
+    "name": "Nemotron 3 Nano Omni",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -525,7 +525,7 @@
   },
   {
     "id": "poolside/laguna-m.1:free",
-    "name": "Laguna M.1 (free)",
+    "name": "Laguna M.1",
     "costInput": 0,
     "costOutput": 0,
     "category": "Code",
@@ -544,7 +544,7 @@
   },
   {
     "id": "google/gemma-4-26b-a4b-it:free",
-    "name": "Gemma 4 26B A4B (free)",
+    "name": "Gemma 4 26B A4B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -565,7 +565,7 @@
   },
   {
     "id": "google/gemma-4-31b-it:free",
-    "name": "Gemma 4 31B (free)",
+    "name": "Gemma 4 31B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -586,7 +586,7 @@
   },
   {
     "id": "nvidia/nemotron-3-super-120b-a12b:free",
-    "name": "Nemotron 3 Super 120B (free)",
+    "name": "Nemotron 3 Super 120B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -605,7 +605,7 @@
   },
   {
     "id": "nvidia/nemotron-3-nano-30b-a3b:free",
-    "name": "Nemotron 3 Nano 30B (free)",
+    "name": "Nemotron 3 Nano 30B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -624,7 +624,7 @@
   },
   {
     "id": "nvidia/nemotron-nano-12b-v2-vl:free",
-    "name": "Nemotron Nano 12B VL (free)",
+    "name": "Nemotron Nano 12B VL",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -645,7 +645,7 @@
   },
   {
     "id": "qwen/qwen3-next-80b-a3b-instruct:free",
-    "name": "Qwen3 Next 80B A3B (free)",
+    "name": "Qwen3 Next 80B A3B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -664,7 +664,7 @@
   },
   {
     "id": "nvidia/nemotron-nano-9b-v2:free",
-    "name": "Nemotron Nano 9B V2 (free)",
+    "name": "Nemotron Nano 9B V2",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -683,7 +683,7 @@
   },
   {
     "id": "openai/gpt-oss-20b:free",
-    "name": "gpt-oss-20b (free)",
+    "name": "gpt-oss-20b",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -702,7 +702,7 @@
   },
   {
     "id": "qwen/qwen3-coder:free",
-    "name": "Qwen3 Coder 480B (free)",
+    "name": "Qwen3 Coder 480B",
     "costInput": 0,
     "costOutput": 0,
     "category": "Code",
@@ -721,7 +721,7 @@
   },
   {
     "id": "meta-llama/llama-3.3-70b-instruct:free",
-    "name": "Llama 3.3 70B (free)",
+    "name": "Llama 3.3 70B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -740,7 +740,7 @@
   },
   {
     "id": "meta-llama/llama-3.2-3b-instruct:free",
-    "name": "Llama 3.2 3B (free)",
+    "name": "Llama 3.2 3B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",
@@ -759,7 +759,7 @@
   },
   {
     "id": "nousresearch/hermes-3-llama-3.1-405b:free",
-    "name": "Hermes 3 405B (free)",
+    "name": "Hermes 3 405B",
     "costInput": 0,
     "costOutput": 0,
     "category": "General LLM",

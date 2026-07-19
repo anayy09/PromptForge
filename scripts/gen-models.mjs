@@ -86,7 +86,7 @@ const EXCLUDED = new Map([
 // unchanged (Code models stay targets-only and never become rewriters).
 const CURATED = {
   "tencent/hy3:free": {
-    name: "Hy3 (free)",
+    name: "Hy3",
     category: "General LLM",
     architecture: "Transformer",
     size: "Undisclosed",
@@ -94,7 +94,7 @@ const CURATED = {
     bestFor: "Free 256K-context generalist from Tencent",
   },
   "poolside/laguna-xs-2.1:free": {
-    name: "Laguna XS 2.1 (free)",
+    name: "Laguna XS 2.1",
     category: "Code",
     architecture: "Code-Specialized Transformer",
     size: "Undisclosed",
@@ -102,7 +102,7 @@ const CURATED = {
     bestFor: "Compact Poolside code specialist; free coding target",
   },
   "poolside/laguna-m.1:free": {
-    name: "Laguna M.1 (free)",
+    name: "Laguna M.1",
     category: "Code",
     architecture: "Code-Specialized Transformer",
     size: "Undisclosed",
@@ -110,7 +110,7 @@ const CURATED = {
     bestFor: "Mid-size Poolside code specialist; free coding target",
   },
   "cohere/north-mini-code:free": {
-    name: "North Mini Code (free)",
+    name: "North Mini Code",
     category: "Code",
     architecture: "Code-Specialized Transformer",
     size: "Undisclosed",
@@ -118,7 +118,7 @@ const CURATED = {
     bestFor: "Cohere code specialist with a 256K window; free coding target",
   },
   "qwen/qwen3-coder:free": {
-    name: "Qwen3 Coder 480B (free)",
+    name: "Qwen3 Coder 480B",
     category: "Code",
     architecture: "MoE (Mixture of Experts)",
     size: "480B total / 35B active",
@@ -126,7 +126,7 @@ const CURATED = {
     bestFor: "Largest free code model: 480B MoE code specialist",
   },
   "nvidia/nemotron-3-ultra-550b-a55b:free": {
-    name: "Nemotron 3 Ultra 550B (free)",
+    name: "Nemotron 3 Ultra 550B",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts)",
     size: "550B total / 55B active",
@@ -134,7 +134,7 @@ const CURATED = {
     bestFor: "Largest free reasoning model in the registry; 1M-token context",
   },
   "nvidia/nemotron-3-super-120b-a12b:free": {
-    name: "Nemotron 3 Super 120B (free)",
+    name: "Nemotron 3 Super 120B",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts)",
     size: "120B total / 12B active",
@@ -142,7 +142,7 @@ const CURATED = {
     bestFor: "Free tier of the registry's best value-for-quality MoE",
   },
   "nvidia/nemotron-3-nano-30b-a3b:free": {
-    name: "Nemotron 3 Nano 30B (free)",
+    name: "Nemotron 3 Nano 30B",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts)",
     size: "30B total / 3B active",
@@ -150,7 +150,7 @@ const CURATED = {
     bestFor: "Free efficient MoE; good fast rewriter and classifier",
   },
   "nvidia/nemotron-nano-9b-v2:free": {
-    name: "Nemotron Nano 9B V2 (free)",
+    name: "Nemotron Nano 9B V2",
     category: "General LLM",
     architecture: "Dense Transformer",
     size: "9B",
@@ -158,7 +158,7 @@ const CURATED = {
     bestFor: "Small free model for quick, low-stakes tasks",
   },
   "nvidia/nemotron-nano-12b-v2-vl:free": {
-    name: "Nemotron Nano 12B VL (free)",
+    name: "Nemotron Nano 12B VL",
     category: "General LLM",
     architecture: "Dense Transformer (Multimodal)",
     size: "12B",
@@ -166,7 +166,7 @@ const CURATED = {
     bestFor: "Free compact vision-language model",
   },
   "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": {
-    name: "Nemotron 3 Nano Omni (free)",
+    name: "Nemotron 3 Nano Omni",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts, Multimodal)",
     size: "30B total / 3B active",
@@ -174,7 +174,7 @@ const CURATED = {
     bestFor: "Free omni-input model: text, image, audio, and video in",
   },
   "google/gemma-4-26b-a4b-it:free": {
-    name: "Gemma 4 26B A4B (free)",
+    name: "Gemma 4 26B A4B",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts, Multimodal)",
     size: "26B total / 4B active",
@@ -182,7 +182,7 @@ const CURATED = {
     bestFor: "Free multimodal MoE; image and video input at no cost",
   },
   "google/gemma-4-31b-it:free": {
-    name: "Gemma 4 31B (free)",
+    name: "Gemma 4 31B",
     category: "General LLM",
     architecture: "Dense Transformer (Multimodal)",
     size: "31B",
@@ -190,7 +190,7 @@ const CURATED = {
     bestFor: "Free tier of the multimodal default; image and video input",
   },
   "qwen/qwen3-next-80b-a3b-instruct:free": {
-    name: "Qwen3 Next 80B A3B (free)",
+    name: "Qwen3 Next 80B A3B",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts)",
     size: "80B total / 3B active",
@@ -198,7 +198,7 @@ const CURATED = {
     bestFor: "Free 80B MoE generalist with a 256K window",
   },
   "openai/gpt-oss-20b:free": {
-    name: "gpt-oss-20b (free)",
+    name: "gpt-oss-20b",
     category: "General LLM",
     architecture: "MoE (Mixture of Experts)",
     size: "21B total / 3.6B active",
@@ -206,7 +206,7 @@ const CURATED = {
     bestFor: "Free tier of the cheapest Navigator LLM; ideal classifier",
   },
   "meta-llama/llama-3.3-70b-instruct:free": {
-    name: "Llama 3.3 70B (free)",
+    name: "Llama 3.3 70B",
     category: "General LLM",
     architecture: "Dense Transformer",
     size: "70B",
@@ -214,7 +214,7 @@ const CURATED = {
     bestFor: "Free tier of the Meta 70B flagship",
   },
   "meta-llama/llama-3.2-3b-instruct:free": {
-    name: "Llama 3.2 3B (free)",
+    name: "Llama 3.2 3B",
     category: "General LLM",
     architecture: "Dense Transformer",
     size: "3B",
@@ -222,7 +222,7 @@ const CURATED = {
     bestFor: "Smallest free model; fastest responses for simple asks",
   },
   "nousresearch/hermes-3-llama-3.1-405b:free": {
-    name: "Hermes 3 405B (free)",
+    name: "Hermes 3 405B",
     category: "General LLM",
     architecture: "Dense Transformer",
     size: "405B",
