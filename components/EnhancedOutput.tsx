@@ -198,8 +198,8 @@ export function EnhancedOutput({
         </span>
       </div>
 
-      {/* tab strip */}
-      <div className="flex items-center gap-0.5 overflow-x-auto border-b border-hairline px-2 py-1.5">
+      {/* tab strip: underline indicator, counts as quiet chips */}
+      <div className="flex items-center gap-4 overflow-x-auto border-b border-hairline px-4">
         {tabs
           .filter((t) => t.show)
           .map((t) => {
@@ -208,12 +208,18 @@ export function EnhancedOutput({
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`whitespace-nowrap rounded-full px-2.5 py-1 text-2xs font-medium transition-colors ${
-                  active ? "bg-ember/12 text-ember" : "text-muted hover:text-ink"
+                className={`relative whitespace-nowrap pb-2.5 pt-2 text-xs font-medium transition-colors ${
+                  active
+                    ? "text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:rounded-full after:bg-ember"
+                    : "text-muted hover:text-ink"
                 }`}
               >
                 {t.label}
-                {typeof t.count === "number" && t.id !== "diff" ? ` (${t.count})` : ""}
+                {typeof t.count === "number" && t.id !== "diff" && (
+                  <span className="ml-1.5 rounded-full bg-surface-2 px-1.5 py-0.5 text-2xs tabular-nums text-muted">
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}
