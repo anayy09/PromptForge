@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import {
   Send,
   Square,
@@ -164,6 +164,7 @@ export function Composer({
   transcribing,
   onMicToggle,
   imageMode,
+  modelSlot,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -179,6 +180,8 @@ export function Composer({
   transcribing: boolean;
   onMicToggle: () => void;
   imageMode: boolean;
+  /** Model picker chip rendered inside the toolbar (ChatGPT/Claude pattern). */
+  modelSlot?: ReactNode;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -240,10 +243,10 @@ export function Composer({
 
   return (
     <div
-      className={`relative rounded-2xl border bg-surface p-2 shadow-card transition-colors ${
+      className={`relative rounded-2xl border bg-surface p-2 shadow-card transition-all duration-200 focus-within:shadow-lifted ${
         dragging
           ? "border-ember bg-ember/[0.04]"
-          : "border-hairline"
+          : "border-hairline focus-within:border-ember/50"
       }`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -332,6 +335,7 @@ export function Composer({
       />
 
       <div className="flex items-center gap-1.5 px-1 pb-0.5">
+        {modelSlot && <div className="mr-0.5 min-w-0 max-w-[45%]">{modelSlot}</div>}
         {/* Always show attach button — text files work for any model */}
         <input
           ref={fileRef}

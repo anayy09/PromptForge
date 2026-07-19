@@ -45,6 +45,7 @@ export function Select({
   placeholder = "Select…",
   variant = "field",
   leading,
+  menuPlacement = "bottom",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -55,6 +56,8 @@ export function Select({
   variant?: "field" | "pill";
   /** Optional icon rendered before the label in the trigger. */
   leading?: ReactNode;
+  /** Where the menu opens; use "top" for selects docked near the viewport bottom. */
+  menuPlacement?: "bottom" | "top";
 }) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -152,7 +155,9 @@ export function Select({
           ref={listRef}
           role="listbox"
           aria-label={ariaLabel}
-          className="absolute left-0 top-[calc(100%+4px)] z-40 max-h-72 w-full min-w-52 animate-pop-in overflow-y-auto rounded-xl border border-hairline bg-raised p-1 shadow-lifted"
+          className={`absolute left-0 z-40 max-h-72 w-full min-w-52 animate-pop-in overflow-y-auto rounded-xl border border-hairline bg-raised p-1 shadow-lifted ${
+            menuPlacement === "top" ? "bottom-[calc(100%+4px)]" : "top-[calc(100%+4px)]"
+          }`}
         >
           {options.map((o, i) => {
             const header = o.group && o.group !== lastGroup ? o.group : null;

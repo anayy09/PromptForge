@@ -419,7 +419,7 @@ export function ChatView() {
   const empty = messages.length === 0;
 
   return (
-    <div className="grid h-[calc(100dvh-11rem)] min-h-[420px] grid-cols-1 gap-4 lg:grid-cols-[15rem_1fr]">
+    <div className="grid h-[calc(100dvh-12rem)] min-h-[420px] grid-cols-1 gap-4 md:h-[calc(100dvh-4.75rem)] lg:grid-cols-[15rem_1fr]">
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:block">
         <ConversationSidebar
@@ -431,18 +431,16 @@ export function ChatView() {
         />
       </aside>
 
-      {/* Main column */}
+      {/* Main column. The model lives in the composer; mobile gets a slim
+          new-chat row since the conversation sidebar is desktop-only. */}
       <div className="flex min-h-0 flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-full max-w-xs">
-            <ChatModelPicker value={modelId} onChange={setModelId} />
-          </div>
+        <div className="flex items-center lg:hidden">
           <button
             onClick={newChat}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:text-ink lg:hidden"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:text-ink"
           >
             <Plus size={14} aria-hidden />
-            New
+            New chat
           </button>
         </div>
 
@@ -486,6 +484,7 @@ export function ChatView() {
             transcribing={transcribing}
             onMicToggle={toggleMic}
             imageMode={imageMode}
+            modelSlot={<ChatModelPicker value={modelId} onChange={setModelId} variant="pill" />}
           />
           <p className="mt-1.5 text-center text-2xs text-faint">
             {imageMode

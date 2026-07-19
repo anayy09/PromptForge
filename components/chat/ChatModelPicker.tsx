@@ -23,9 +23,12 @@ function modalityBadges(modalities: string[]): string {
 export function ChatModelPicker({
   value,
   onChange,
+  variant = "field",
 }: {
   value: string;
   onChange: (id: string) => void;
+  /** "pill": compact chip for the composer toolbar; menu opens upward. */
+  variant?: "field" | "pill";
 }) {
   const { filter } = useModelAvailability();
   const chat = filter(getChatModels());
@@ -42,6 +45,19 @@ export function ChatModelPicker({
     ),
     ...images.map((m) => ({ value: m.id, label: m.name, group: "Image generation" })),
   ];
+
+  if (variant === "pill") {
+    return (
+      <Select
+        ariaLabel="Model"
+        value={value}
+        onChange={onChange}
+        options={options}
+        variant="pill"
+        menuPlacement="top"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1">
