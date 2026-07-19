@@ -195,6 +195,20 @@
   }
 }
 
+/* Briefly applied by the settings provider while theme / accent / density
+ * changes, so the whole surface cross-fades instead of snapping. The
+ * reduced-motion rules below come later in the sheet, so they win. */
+html.theming,
+html.theming *,
+html.theming *::before,
+html.theming *::after {
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    color 200ms ease-out,
+    fill 200ms ease-out !important;
+}
+
 /* Respect reduced motion, from the OS or from Settings > Appearance. */
 @media (prefers-reduced-motion: reduce) {
   *,

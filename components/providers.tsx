@@ -69,6 +69,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
       saveSettings(next);
+      // Cross-fade the whole surface when the look changes (globals.css
+      // `.theming`); the class is transient so normal interactions stay fast.
+      if (patch.theme || patch.accent || patch.density) {
+        const root = document.documentElement;
+        root.classList.add("theming");
+        window.setTimeout(() => root.classList.remove("theming"), 260);
+      }
       if (patch.theme) setResolvedTheme(applyTheme(patch.theme));
       if (patch.accent || patch.density || patch.motion) applyAppearance(next);
       return next;

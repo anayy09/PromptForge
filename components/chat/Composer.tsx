@@ -411,7 +411,7 @@ export function Composer({
           <button
             onClick={onSend}
             disabled={empty}
-            className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-ember text-on-ember shadow-soft transition-colors hover:bg-ember-strong disabled:opacity-40 sm:ml-2"
+            className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-ember text-on-ember shadow-soft transition-all duration-150 hover:bg-ember-strong active:scale-95 disabled:opacity-40 sm:ml-2"
             aria-label={imageMode ? "Generate image" : "Send message"}
           >
             {imageMode ? <ImagePlus size={16} aria-hidden /> : <Send size={16} aria-hidden />}
